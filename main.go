@@ -1,8 +1,8 @@
 package main
 
 import (
-	"Driver-go/elevio"
-	"Driver-go/fsm"
+	"Heis/elevio"
+	"Heis/fsm"
 	"fmt"
 )
 
