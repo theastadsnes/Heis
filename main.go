@@ -1,7 +1,10 @@
 package main
 
-import "Driver-go/elevio"
-import "fmt"
+import (
+	"Driver-go/elevio"
+	"Driver-go/fsm"
+	"fmt"
+)
 
 func main(){
 
@@ -28,7 +31,7 @@ func main(){
         case a := <- drv_buttons:
             fmt.Printf("%+v\n", a)
             elevio.SetButtonLamp(a.Button, a.Floor, true)
-            
+            fsm.Fsm_onRequestButtonPress(a.Floor, a.Button)
         case a := <- drv_floors:
             fmt.Printf("%+v\n", a)
             if a == numFloors-1 {
