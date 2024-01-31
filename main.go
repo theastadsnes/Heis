@@ -3,6 +3,7 @@ package main
 import (
 	"Heis/elevio"
 	"Heis/fsm"
+
 	"Heis/requests"
 	"fmt"
 )
@@ -31,15 +32,16 @@ func main() {
 		case a := <-drv_buttons:
 			fmt.Printf("%+v\n", a)
 			elevio.SetButtonLamp(a.Button, a.Floor, true)
-			fsm.Fsm_onRequestButtonPress(a.Floor, a.Button)
+			requests.Fsm_onRequestButtonPress(a.Floor, a.Button)
 
 		case a := <-Drv_floors:
+			fsm.Our_elevator.Floor = a
 			fmt.Printf("%+v\n", a)
-			if a < requests.Requests_chooseDirection(fsm.Our_elevator) {
-				d = elevio.MD_Up
-				elevio.SetMotorDirection(d)
+			fmt.Print(fsm.Our_elevator.NextDest)
+			if a == fsm.Our_elevator.NextDest {
+				elevio.SetMotorDirection(elevio.MD_Stop)
+				fmt.Printf("hei")
 			}
-            if a ==
 
 			/*
 				if a == numFloors-1 {
