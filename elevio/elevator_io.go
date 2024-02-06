@@ -96,7 +96,7 @@ func PollFloorSensor(receiver chan<- int) int {
 		}
 		prev = v
 	}
-	
+
 }
 
 func PollStopButton(receiver chan<- bool) {
@@ -189,4 +189,8 @@ func toBool(a byte) bool {
 		b = true
 	}
 	return b
+}
+
+func Set_timer(duration time.Duration) {
+	time.Sleep(duration * time.Second)
 }

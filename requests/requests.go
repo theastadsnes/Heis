@@ -4,57 +4,103 @@ import (
 	//"Heis/elevio"
 	"Heis/elevio"
 	"Heis/fsm"
+	"fmt"
 )
 
-func Requests_chooseDirection(e *fsm.Elevator) {
-	var Floor int
-	for f := 0; f < fsm.NumFloors; f++ {
-		for b := 0; b < fsm.NumButtons; b++ {
+var Floors int = 4
+var Buttons int = 4
+
+func Requests_above(e fsm.Elevator) bool {
+	for f := e.Floor + 1; f < Floors; f++ {
+		for b := 0; b < Buttons; b++ {
 			if e.Requests[f][b] == 1 {
-				Floor = f
-				e.NextDest = f
+				return true
 			}
 		}
 	}
-	if Floor > e.Floor {
-		elevio.SetMotorDirection(elevio.MD_Up)
-	}
-
+	return false
 }
-func Fsm_onRequestButtonPress(btn_floor int, btn_type elevio.ButtonType) {
 
-	fsm.Our_elevator.Requests[btn_floor][btn_type] = 1
-	Requests_chooseDirection(&fsm.Our_elevator)
-	print("hei")
-	/*
-		if Our_elevator.Behaviour == EB_DoorOpen {
-			//Har ikke lagt til requests_shouldClearImmediatelym har ikke helt skjønt hva denne gjør, kan se på senere
-			Our_elevator.Requests[btn_floor][btn_type] = 1
-
-		} else if Our_elevator.Behaviour == EB_Moving {
-			Our_elevator.Requests[btn_floor][btn_type] = 1
-
-		} else if Our_elevator.Behaviour == EB_Idle{
-			Our_elevator.Requests[btn_floor][btn_type] = 1
-			Pair = Requests_chooseDirection(Our_elevator)
-			Our_elevator.Dirn = Pair.Dirn
-			Our_elevator.Behaviour = Pair.Behaviour
-
-			if Our_elevator.Behaviour == EB_DoorOpen {
-				elevio.SetDoorOpenLamp(true)
-				Timer_start(Our_elevator.Config.DoorOpenDurationS)
-				Our_elevator = Requests_clearAtCurrentFloor(Our_elevator)
-
-			} else if Our_elevator.Behaviour == EB_Moving{
-				elevio.SetMotorDirection(Our_elevator.Dirn)
-
-			} else if Our_elevator.Behaviour == EB_Idle{
-
+func Requests_below(e fsm.Elevator) bool { //Kanskje feil, nå teller vi nedover fra etasjen vi er i, men kanskje riktig å telle fra 0 TIL etasjen vi er i
+	for f := e.Floor - 1; f >= 0; f-- {
+		for b := 0; b < Buttons; b++ {
+			if e.Requests[f][b] == 1 {
+				return true
 			}
-
-
 		}
-	*/
+	}
+	return false
+}
 
-	//LYS er i c kode her, skjønte ikke hvorfor den skal slå på lys nå?
+func Requests_current_floor(e fsm.Elevator) bool {
+	for b := 0; b < Buttons; b++ {
+		if e.Requests[e.Floor][b] == 1 {
+			return true
+		}
+	}
+	return false
+}
+
+func Clear_lights() {
+	for f := 0; f < Floors; f++ {
+		elevio.SetButtonLamp(0, f, false)
+		elevio.SetButtonLamp(1, f, false)
+		elevio.SetButtonLamp(2, f, false)
+
+	}
+}
+
+func Clear_request_at_floor(e *fsm.Elevator) {
+	fsm.Our_elevator.Requests[e.Floor][int(elevio.BT_Cab)] = 0
+	elevio.SetButtonLamp(elevio.BT_Cab, e.Floor, false)
+
+	switch {
+	case fsm.Our_elevator.Dirn == elevio.MD_Up:
+		fsm.Our_elevator.Requests[e.Floor][int(elevio.BT_HallUp)] = 0
+		elevio.SetButtonLamp(elevio.BT_HallUp, e.Floor, false)
+		if !Requests_above(fsm.Our_elevator) {
+			fsm.Our_elevator.Requests[e.Floor][int(elevio.BT_HallDown)] = 0
+			elevio.SetButtonLamp(elevio.BT_HallDown, e.Floor, false)
+		}
+	case fsm.Our_elevator.Dirn == elevio.MD_Down:
+		fsm.Our_elevator.Requests[e.Floor][int(elevio.BT_HallDown)] = 0
+		elevio.SetButtonLamp(elevio.BT_HallDown, e.Floor, false)
+		if !Requests_above(fsm.Our_elevator) {
+			fsm.Our_elevator.Requests[e.Floor][int(elevio.BT_HallUp)] = 0
+			elevio.SetButtonLamp(elevio.BT_HallUp, e.Floor, false)
+		}
+
+	}
+}
+
+func Requests_chooseDirection(e *fsm.Elevator) {
+	fmt.Printf("retning, inni choose:")
+	fmt.Print(e.Dirn)
+	switch e.Dirn {
+	case elevio.MD_Up:
+		if Requests_above(*e) {
+			e.Dirn = elevio.MD_Up
+		} else if Requests_below(*e) {
+			e.Dirn = elevio.MD_Down
+		} else {
+			e.Dirn = elevio.MD_Stop
+		}
+	case elevio.MD_Down:
+		if Requests_below(*e) {
+			e.Dirn = elevio.MD_Down
+		} else if Requests_above(*e) {
+			e.Dirn = elevio.MD_Up
+		} else {
+			e.Dirn = elevio.MD_Stop
+		}
+	case elevio.MD_Stop:
+		if Requests_above(*e) {
+			e.Dirn = elevio.MD_Up
+		} else if Requests_below(*e) {
+			e.Dirn = elevio.MD_Down
+		} else {
+			e.Dirn = elevio.MD_Stop
+		}
+	}
+
 }
