@@ -25,6 +25,7 @@ func Fsm_onRequestButtonPress(btn_floor int, btn_type elevio.ButtonType) {
 
 	fsm.Our_elevator.Requests[btn_floor][btn_type] = 1
 	Requests_chooseDirection(&fsm.Our_elevator)
+	print("hei")
 	/*
 		if Our_elevator.Behaviour == EB_DoorOpen {
 			//Har ikke lagt til requests_shouldClearImmediatelym har ikke helt skjønt hva denne gjør, kan se på senere
