@@ -1,9 +1,7 @@
 package fsm
 
 import (
-	"Heis/elevio"
-	//"Heis/requests"
-	
+	"Heis/singleElev/elevio"
 )
 
 const (
@@ -46,9 +44,9 @@ const (
 
 type Elevator struct {
 	Floor     int
-	NextDest int
+	NextDest  int
 	Dirn      elevio.MotorDirection
-	Requests  [4][4]int 
+	Requests  [4][4]int
 	Behaviour ElevatorBehaviour
 
 	Config struct {
@@ -56,4 +54,3 @@ type Elevator struct {
 		DoorOpenDurationS   float64
 	}
 }
-

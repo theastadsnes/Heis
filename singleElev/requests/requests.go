@@ -2,8 +2,8 @@ package requests
 
 import (
 	//"Heis/elevio"
-	"Heis/elevio"
-	"Heis/fsm"
+	"Heis/singleElev/elevio"
+	"Heis/singleElev/fsm"
 	"fmt"
 )
 

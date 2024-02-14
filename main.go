@@ -1,11 +1,11 @@
 package main
 
 import (
-	"Heis/elevio"
-	"Heis/fsm"
+	"Heis/singleElev/elevio"
+	"Heis/singleElev/fsm"
 	"time"
 
-	"Heis/requests"
+	"Heis/singleElev/requests"
 	"fmt"
 )
 
