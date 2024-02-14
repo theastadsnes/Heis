@@ -33,10 +33,30 @@ func Requests_below(e fsm.Elevator) bool { //Kanskje feil, nå teller vi nedover
 }
 
 func Requests_current_floor(e fsm.Elevator) bool {
+
 	for b := 0; b < Buttons; b++ {
 		if e.Requests[e.Floor][b] == 1 {
 			return true
 		}
+
+	}
+	return false
+}
+
+func Should_stop(e fsm.Elevator) bool {
+	if Requests_current_floor(e) {
+		switch {
+		case e.Dirn == elevio.MD_Down:
+			if fsm.Our_elevator.Requests[e.Floor][elevio.BT_HallUp] == 1 && Requests_below(e) {
+				return false
+			}
+		case e.Dirn == elevio.MD_Up:
+			if fsm.Our_elevator.Requests[e.Floor][elevio.BT_HallDown] == 1 && Requests_above(e) {
+				return false
+			}
+
+		}
+		return true
 	}
 	return false
 }
@@ -65,7 +85,7 @@ func Clear_request_at_floor(e *fsm.Elevator) {
 	case fsm.Our_elevator.Dirn == elevio.MD_Down:
 		fsm.Our_elevator.Requests[e.Floor][int(elevio.BT_HallDown)] = 0
 		elevio.SetButtonLamp(elevio.BT_HallDown, e.Floor, false)
-		if !Requests_above(fsm.Our_elevator) {
+		if !Requests_below(fsm.Our_elevator) {
 			fsm.Our_elevator.Requests[e.Floor][int(elevio.BT_HallUp)] = 0
 			elevio.SetButtonLamp(elevio.BT_HallUp, e.Floor, false)
 		}
