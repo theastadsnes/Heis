@@ -5,7 +5,7 @@ import (
 )
 
 const (
-	NumFloors  = 4 // Example values
+	NumFloors  = 4
 	NumButtons = 4
 )
 
@@ -19,16 +19,6 @@ const (
 	EB_DoorOpen
 	EB_Moving
 )
-
-/*
-type Dirn int
-
-const (
-	D_Down Dirn = -1
-	D_Stop Dirn = 0
-	D_Up   Dirn = 1
-)
-*/
 
 type DirnBehaviourPair struct {
 	Dirn      elevio.MotorDirection
@@ -53,4 +43,29 @@ type Elevator struct {
 		ClearRequestVariant ClearRequestVariant
 		DoorOpenDurationS   float64
 	}
+}
+
+type RequestState int
+
+const (
+	None      RequestState = 0
+	Order     RequestState = 1
+	Comfirmed RequestState = 2
+	Complete  RequestState = 3
+)
+
+type LocalElevatorState struct {
+	ID       string
+	Floor    int
+	Dir      ElevatorBehaviour
+	Requests [][]RequestState
+	Behave   ElevatorBehaviour
+}
+
+func InitElevState(id string) LocalElevatorState {
+	requests := make([][]RequestState, 4)
+	for floor := range requests {
+		requests[floor] = make([]RequestState, 3)
+	}
+	return LocalElevatorState{Requests: requests, ID: id, Floor: 0, Behave: EB_Idle}
 }

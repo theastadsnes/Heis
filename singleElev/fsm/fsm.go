@@ -22,23 +22,23 @@ import (
  * @param numFloors Total number of floors in the building.
  */
 func Fsm(buttons chan elevio.ButtonEvent, floors chan int, obstr chan bool, stop chan bool, doorTimer *time.Timer, numFloors int) {
-	requests.Clear_lights() // Clear all button lights initially
+	requests.Clear_lights()
 	for {
 		select {
 		case order := <-buttons:
-			if !elevio.GetStop() { // Listen for button events
-				elevio.SetButtonLamp(order.Button, order.Floor, true) // Turn on button lamp for the pressed button
+			if !elevio.GetStop() {
+				elevio.SetButtonLamp(order.Button, order.Floor, true)
 				switch {
 				case config.Our_elevator.Behaviour == config.EB_DoorOpen:
 					if order.Floor == config.Our_elevator.Floor {
-						elevio.SetDoorOpenLamp(true) // Open door if elevator is at the pressed floor
+						elevio.SetDoorOpenLamp(true)
 						requests.Clear_request_at_floor(&config.Our_elevator)
-						doorTimer.Reset(time.Duration(3) * time.Second) // Reset door timer
+						doorTimer.Reset(time.Duration(3) * time.Second)
 					} else {
-						config.Our_elevator.Requests[order.Floor][order.Button] = 1 // Add request to elevator queue
+						config.Our_elevator.Requests[order.Floor][order.Button] = 1
 					}
 				case config.Our_elevator.Behaviour == config.EB_Moving:
-					config.Our_elevator.Requests[order.Floor][order.Button] = 1 // Add request to elevator queue
+					config.Our_elevator.Requests[order.Floor][order.Button] = 1
 				case config.Our_elevator.Behaviour == config.EB_Idle:
 					if order.Floor == config.Our_elevator.Floor {
 						elevio.SetDoorOpenLamp(true)
@@ -46,7 +46,7 @@ func Fsm(buttons chan elevio.ButtonEvent, floors chan int, obstr chan bool, stop
 						config.Our_elevator.Behaviour = config.EB_DoorOpen
 						doorTimer.Reset(time.Duration(3) * time.Second)
 					} else {
-						config.Our_elevator.Requests[order.Floor][order.Button] = 1 // Add request to elevator queue
+						config.Our_elevator.Requests[order.Floor][order.Button] = 1
 						if requests.Requests_above(config.Our_elevator) {
 							config.Our_elevator.Dirn = elevio.MD_Up
 							elevio.SetMotorDirection(config.Our_elevator.Dirn)
@@ -60,9 +60,9 @@ func Fsm(buttons chan elevio.ButtonEvent, floors chan int, obstr chan bool, stop
 				}
 			}
 
-		case floor := <-floors: // Listen for floor events
-			config.Our_elevator.Floor = floor              // Update current floor
-			if requests.Should_stop(config.Our_elevator) { // Check if elevator should stop at the current floor
+		case floor := <-floors:
+			config.Our_elevator.Floor = floor
+			if requests.Should_stop(config.Our_elevator) {
 				elevio.SetMotorDirection(elevio.MD_Stop)
 				elevio.SetDoorOpenLamp(true)
 				requests.Clear_request_at_floor(&config.Our_elevator)
@@ -70,7 +70,7 @@ func Fsm(buttons chan elevio.ButtonEvent, floors chan int, obstr chan bool, stop
 				doorTimer.Reset(time.Duration(3) * time.Second)
 			}
 
-		case <-doorTimer.C: // Listen for door timer expiration
+		case <-doorTimer.C:
 			elevio.SetDoorOpenLamp(false)
 			switch {
 			case config.Our_elevator.Behaviour == config.EB_DoorOpen:
@@ -83,7 +83,7 @@ func Fsm(buttons chan elevio.ButtonEvent, floors chan int, obstr chan bool, stop
 				}
 			}
 
-		case obstruction := <-obstr: // Listen for obstruction events
+		case obstruction := <-obstr:
 			if config.Our_elevator.Behaviour == config.EB_DoorOpen {
 				if obstruction {
 					if !doorTimer.Stop() {

@@ -156,6 +156,10 @@ func Requests_chooseDirection(e *config.Elevator) {
 	}
 }
 
+/**
+ * @brief Clears requests and button lights at all floors.
+ * @param numFloors Number of floors
+ */
 func Clear_all_requests(numFloors int) {
 	for floor := 0; floor < numFloors; floor++ {
 		for button := elevio.ButtonType(0); button < 3; button++ {
