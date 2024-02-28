@@ -6,8 +6,8 @@
 package main
 
 import (
-	"fmt"
 	"Heis/costfunc"
+	"fmt"
 )
 
 /**
@@ -43,7 +43,7 @@ func main() {
 	*/
 
 	hallRequests := [][2]bool{{false, false}, {true, false}, {false, false}, {false, true}}
-	states := map[string]HRAElevState{
+	states := map[string]costfunc.HRAElevState{
 		"one": {
 			Behavior:    "moving",
 			Floor:       2,
@@ -68,6 +68,5 @@ func main() {
 	for k, v := range output {
 		fmt.Printf("%6v :  %+v\n", k, v)
 	}
-	
-	
+
 }
