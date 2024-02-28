@@ -50,7 +50,7 @@ type RequestState int
 const (
 	None      RequestState = 0
 	Order     RequestState = 1
-	Comfirmed RequestState = 2
+	Confirmed RequestState = 2
 	Complete  RequestState = 3
 )
 
