@@ -1,41 +1,78 @@
-/**
- * @file main.go
- * @brief Entry point for the elevator control program.
- */
 
 package main
 
-import (
-	"Heis/singleElev/elevio"
-	"Heis/singleElev/fsm"
-	"time"
-)
+import "os/exec"
+import "fmt"
+import "encoding/json"
+import "runtime"
 
-/**
- * @brief The entry point for the elevator control program.
- */
-func main() {
-	// Define the number of floors in the building
-	numFloors := 4
+// Struct members must be public in order to be accessible by json.Marshal/.Unmarshal
+// This means they must start with a capital letter, so we need to use field renaming struct tags to make them camelCase
 
-	// Initialize elevator I/O
-	elevio.Init("localhost:15657", numFloors)
+type HRAElevState struct {
+    Behavior    string      `json:"behaviour"`
+    Floor       int         `json:"floor"` 
+    Direction   string      `json:"direction"`
+    CabRequests []bool      `json:"cabRequests"`
+}
 
-	// Create channels for elevator I/O events
-	drv_buttons := make(chan elevio.ButtonEvent)
-	drv_floors := make(chan int)
-	drv_obstr := make(chan bool)
-	drv_stop := make(chan bool)
+type HRAInput struct {
+    HallRequests    [][2]bool                   `json:"hallRequests"`
+    States          map[string]HRAElevState     `json:"states"`
+}
 
-	// Create a timer for the door
-	doorTimer := time.NewTimer(time.Duration(3) * time.Second)
 
-	// Start polling for elevator I/O events
-	go elevio.PollButtons(drv_buttons)
-	go elevio.PollFloorSensor(drv_floors)
-	go elevio.PollObstructionSwitch(drv_obstr)
-	go elevio.PollStopButton(drv_stop)
 
-	// Start the finite state machine for elevator control
-	fsm.Fsm(drv_buttons, drv_floors, drv_obstr, drv_stop, doorTimer, numFloors)
+func main(){
+
+    hraExecutable := ""
+    switch runtime.GOOS {
+		case "linux", "darwin": hraExecutable  = "hall_request_assigner"
+
+        case "windows": hraExecutable  = "hall_request_assigner.exe"
+        default:        panic("OS not supported")
+    }
+
+    input := HRAInput{
+        HallRequests: [][2]bool{{false, false}, {true, false}, {false, false}, {false, true}},
+        States: map[string]HRAElevState{
+            "one": HRAElevState{
+                Behavior:       "moving",
+                Floor:          2,
+                Direction:      "up",
+                CabRequests:    []bool{false, false, false, true},
+            },
+            "two": HRAElevState{
+                Behavior:       "idle",
+                Floor:          0,
+                Direction:      "stop",
+                CabRequests:    []bool{false, false, false, false},
+            },
+        },
+    }
+
+    jsonBytes, err := json.Marshal(input)
+    if err != nil {
+        fmt.Println("json.Marshal error: ", err)
+        return
+    }
+    
+    ret, err := exec.Command("../Heis/"+hraExecutable, "-i", string(jsonBytes)).CombinedOutput()
+    if err != nil {
+        fmt.Println("exec.Command error: ", err)
+        fmt.Println(string(ret))
+        return
+    }
+    
+    output := new(map[string][][2]bool)
+    err = json.Unmarshal(ret, &output)
+    if err != nil {
+        fmt.Println("json.Unmarshal error: ", err)
+        return
+    }
+        
+    fmt.Printf("output: \n")
+    for k, v := range *output {
+        fmt.Printf("%6v :  %+v\n", k, v)
+    }
 }

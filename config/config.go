@@ -38,6 +38,8 @@ type Elevator struct {
 	Dirn      elevio.MotorDirection
 	Requests  [4][4]int
 	Behaviour ElevatorBehaviour
+	ID		  string
+	Online	  bool
 
 	Config struct {
 		ClearRequestVariant ClearRequestVariant
