@@ -33,6 +33,7 @@ const (
 )
 
 type Elevator struct {
+	Id        string
 	Floor     int
 	NextDest  int
 	Dirn      elevio.MotorDirection
