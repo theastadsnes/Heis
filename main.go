@@ -32,12 +32,13 @@ func main() {
 	drv_floors := make(chan int)
 	drv_obstr := make(chan bool)
 	drv_stop := make(chan bool)
-
+	buttons2 := make(chan elevio.ButtonEvent)
 	// Create a timer for the door
 	doorTimer := time.NewTimer(time.Duration(3) * time.Second)
 
 	// Start polling for elevator I/O events
 	go elevio.PollButtons(drv_buttons)
+	go elevio.PollButtons(buttons2)
 	go elevio.PollFloorSensor(drv_floors)
 	go elevio.PollObstructionSwitch(drv_obstr)
 	go elevio.PollStopButton(drv_stop)
@@ -59,7 +60,7 @@ func main() {
 
 	elevator := config.InitElevState(id)
 	// Start the finite state machine for elevator control
-	go fsm.Fsm(&elevator, drv_buttons, drv_floors, drv_obstr, drv_stop, doorTimer, numFloors)
+	go fsm.Fsm(&elevator, buttons2, drv_floors, drv_obstr, drv_stop, doorTimer, numFloors)
 
 	// We make a channel for receiving updates on the id's of the peers that are
 	//  alive on the network
