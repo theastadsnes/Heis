@@ -10,7 +10,6 @@ const (
 )
 
 var Our_elevator Elevator
-Our_elevator = config.InitElevState(id)
 
 var Pair DirnBehaviourPair
 
@@ -67,17 +66,19 @@ type LocalElevatorState struct {
 func InitElevState(id string) Elevator {
 	requests := make([][]int, 4)
 	for floor := range requests {
-		requests[floor] = make([]int, 3)
+		requests[floor] = make([]int, 4)
 	}
-	return Elevator{Id: id, 
-		            Floor: 0, 
-					Dirn: elevio.MD_Stop, 
-					Requests: requests, 
-					Behaviour: EB_Idle,
-					Config: struct{ClearRequestVariant ClearRequestVariant; DoorOpenDurationS float64}{
-						ClearRequestVariant: 0,
-						DoorOpenDurationS: 3.0,
-					},
-				}
+	return Elevator{Id: id,
+		Floor:     0,
+		Dirn:      elevio.MD_Stop,
+		Requests:  requests,
+		Behaviour: EB_Idle,
+		Config: struct {
+			ClearRequestVariant ClearRequestVariant
+			DoorOpenDurationS   float64
+		}{
+			ClearRequestVariant: 0,
+			DoorOpenDurationS:   3.0,
+		},
 	}
-
+}

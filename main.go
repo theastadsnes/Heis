@@ -40,6 +40,7 @@ func main() {
 	go elevio.PollFloorSensor(drv_floors)
 	go elevio.PollObstructionSwitch(drv_obstr)
 	go elevio.PollStopButton(drv_stop)
+	
 	var id string
 	flag.StringVar(&id, "id", "", "id of this peer")
 	flag.Parse()
@@ -55,12 +56,9 @@ func main() {
 		id = fmt.Sprintf("peer-%s-%d", localIP, os.Getpid())
 	}
 	// Start the finite state machine for elevator control
-	go fsm.Fsm(drv_buttons, drv_floors, drv_obstr, drv_stop, doorTimer, numFloors, id)
+	go fsm.Fsm(drv_buttons, drv_floors, drv_obstr, drv_stop, doorTimer, numFloors)
 
 	
-	//Initialize elevator state
-	elevator := config.InitElevState(id)
-
 	// We make a channel for receiving updates on the id's of the peers that are
 	//  alive on the network
 	peerUpdateCh := make(chan peers.PeerUpdate)     //Kanal som sender/mottar uppdateringer i Peer structen, om det er noen som kobles fra nettet eller noen nye tilkoblinger
@@ -74,7 +72,7 @@ func main() {
 	go bcast.Receiver(16569, stateRx)
 	go statehandler.HandlePeerUpdates(peerUpdateCh, stateRx)
 
-	go statehandler.Send(stateTx, elevator)
+	go statehandler.Send(stateTx, config.Our_elevator)
 
 	for{
 

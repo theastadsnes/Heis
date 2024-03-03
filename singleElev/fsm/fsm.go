@@ -24,7 +24,7 @@ import (
 
 
 
-func Fsm(buttons chan elevio.ButtonEvent, floors chan int, obstr chan bool, stop chan bool, doorTimer *time.Timer, numFloors int, id string) {
+func Fsm(buttons chan elevio.ButtonEvent, floors chan int, obstr chan bool, stop chan bool, doorTimer *time.Timer, numFloors int) {
 	requests.Clear_lights()
 	
 
