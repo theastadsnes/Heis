@@ -67,7 +67,8 @@ func main() {
 	peerTxEnable := make(chan bool)                 //Kanal som kan brukes for å vise at man ikke er tilgjengelig, selvom man kanskje er på nettet
 	stateTx := make(chan *config.Elevator) //Gjøre denne om til å sende Elevator state
 	stateRx := make(chan *config.Elevator)
-
+	cabOrder := make(chan *elevio.ButtonEvent)
+	
 	go peers.Transmitter(15647, id, peerTxEnable)
 	go peers.Receiver(15647, peerUpdateCh)
 	go bcast.Transmitter(16569, stateTx)
