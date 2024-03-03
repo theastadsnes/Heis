@@ -5,53 +5,47 @@
 
 package main
 
-
 import (
-	//"Heis/singleElev/elevio"
-	//"Heis/singleElev/fsm"
+	"Heis/config"
 	"Heis/network/bcast"
 	"Heis/network/localip"
 	"Heis/network/peers"
-	"Heis/config"
 	"Heis/network/statehandler"
-	"fmt"
-	"time"
-	"os"
+	"Heis/singleElev/elevio"
+	"Heis/singleElev/fsm"
 	"flag"
+	"fmt"
+	"os"
+	"time"
 )
 
-
 func main() {
-	// Define the number of floors in the building
-	// numFloors := 4
+	//Define the number of floors in the building
+	numFloors := 4
 
-	// // Initialize elevator I/O
-	// elevio.Init("localhost:15657", numFloors)
+	// Initialize elevator I/O
+	elevio.Init("localhost:15000", numFloors)
 
-	// // Create channels for elevator I/O events
-	// drv_buttons := make(chan elevio.ButtonEvent)
-	// drv_floors := make(chan int)
-	// drv_obstr := make(chan bool)
-	// drv_stop := make(chan bool)
+	// Create channels for elevator I/O events
+	drv_buttons := make(chan elevio.ButtonEvent)
+	drv_floors := make(chan int)
+	drv_obstr := make(chan bool)
+	drv_stop := make(chan bool)
 
-	// // Create a timer for the door
-	// doorTimer := time.NewTimer(time.Duration(3) * time.Second)
+	// Create a timer for the door
+	doorTimer := time.NewTimer(time.Duration(3) * time.Second)
 
-	// // Start polling for elevator I/O events
-	// go elevio.PollButtons(drv_buttons)
-	// go elevio.PollFloorSensor(drv_floors)
-	// go elevio.PollObstructionSwitch(drv_obstr)
-	// go elevio.PollStopButton(drv_stop)
-
-	// // Start the finite state machine for elevator control
-	// fsm.Fsm(drv_buttons, drv_floors, drv_obstr, drv_stop, doorTimer, numFloors)
-	
+	// Start polling for elevator I/O events
+	go elevio.PollButtons(drv_buttons)
+	go elevio.PollFloorSensor(drv_floors)
+	go elevio.PollObstructionSwitch(drv_obstr)
+	go elevio.PollStopButton(drv_stop)
 	var id string
 	flag.StringVar(&id, "id", "", "id of this peer")
 	flag.Parse()
 
 	// ... or alternatively, we can use the local IP address.
-	//Når vi skal initialisere et elevator objekt bruker vi LocalIP() til å finne IP adressen til den pcen koden kjøres fra. Denne vil bli lagt til i structen. 
+	//Når vi skal initialisere et elevator objekt bruker vi LocalIP() til å finne IP adressen til den pcen koden kjøres fra. Denne vil bli lagt til i structen.
 	if id == "" {
 		localIP, err := localip.LocalIP()
 		if err != nil {
@@ -60,28 +54,30 @@ func main() {
 		}
 		id = fmt.Sprintf("peer-%s-%d", localIP, os.Getpid())
 	}
+	// Start the finite state machine for elevator control
+	go fsm.Fsm(drv_buttons, drv_floors, drv_obstr, drv_stop, doorTimer, numFloors, id)
+
+	
 	//Initialize elevator state
 	elevator := config.InitElevState(id)
-	
+
 	// We make a channel for receiving updates on the id's of the peers that are
 	//  alive on the network
-	peerUpdateCh := make(chan peers.PeerUpdate) //Kanal som sender/mottar uppdateringer i Peer structen, om det er noen som kobles fra nettet eller noen nye tilkoblinger
-	peerTxEnable := make(chan bool) //Kanal som kan brukes for å vise at man ikke er tilgjengelig, selvom man kanskje er på nettet 
-	stateTx := make(chan config.LocalElevatorState) //Gjøre denne om til å sende Elevator state
-	stateRx := make(chan config.LocalElevatorState)
-	
+	peerUpdateCh := make(chan peers.PeerUpdate)     //Kanal som sender/mottar uppdateringer i Peer structen, om det er noen som kobles fra nettet eller noen nye tilkoblinger
+	peerTxEnable := make(chan bool)                 //Kanal som kan brukes for å vise at man ikke er tilgjengelig, selvom man kanskje er på nettet
+	stateTx := make(chan config.Elevator) //Gjøre denne om til å sende Elevator state
+	stateRx := make(chan config.Elevator)
+
 	go peers.Transmitter(15647, id, peerTxEnable)
 	go peers.Receiver(15647, peerUpdateCh)
 	go bcast.Transmitter(16569, stateTx)
 	go bcast.Receiver(16569, stateRx)
 	go statehandler.HandlePeerUpdates(peerUpdateCh, stateRx)
-	
+
 	go statehandler.Send(stateTx, elevator)
 
-	for {
-        time.Sleep(10 * time.Second) 
-    }
+	for{
 
-	
-	
+	}
+
 }

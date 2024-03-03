@@ -21,8 +21,13 @@ import (
  * @param doorTimer Pointer to the door timer.
  * @param numFloors Total number of floors in the building.
  */
-func Fsm(buttons chan elevio.ButtonEvent, floors chan int, obstr chan bool, stop chan bool, doorTimer *time.Timer, numFloors int) {
+
+
+
+func Fsm(buttons chan elevio.ButtonEvent, floors chan int, obstr chan bool, stop chan bool, doorTimer *time.Timer, numFloors int, id string) {
 	requests.Clear_lights()
+	
+
 	for {
 		select {
 		case order := <-buttons:
