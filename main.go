@@ -6,6 +6,7 @@
 package main
 
 import (
+	"Heis/assigner"
 	"Heis/config"
 	"Heis/network/bcast"
 	"Heis/network/localip"
@@ -40,7 +41,7 @@ func main() {
 	go elevio.PollFloorSensor(drv_floors)
 	go elevio.PollObstructionSwitch(drv_obstr)
 	go elevio.PollStopButton(drv_stop)
-	
+
 	var id string
 	flag.StringVar(&id, "id", "", "id of this peer")
 	flag.Parse()
@@ -60,24 +61,22 @@ func main() {
 	// Start the finite state machine for elevator control
 	go fsm.Fsm(&elevator, drv_buttons, drv_floors, drv_obstr, drv_stop, doorTimer, numFloors)
 
-	
 	// We make a channel for receiving updates on the id's of the peers that are
 	//  alive on the network
-	peerUpdateCh := make(chan peers.PeerUpdate)     //Kanal som sender/mottar uppdateringer i Peer structen, om det er noen som kobles fra nettet eller noen nye tilkoblinger
-	peerTxEnable := make(chan bool)                 //Kanal som kan brukes for å vise at man ikke er tilgjengelig, selvom man kanskje er på nettet
-	stateTx := make(chan *config.Elevator) //Gjøre denne om til å sende Elevator state
+	peerUpdateCh := make(chan peers.PeerUpdate) //Kanal som sender/mottar uppdateringer i Peer structen, om det er noen som kobles fra nettet eller noen nye tilkoblinger
+	peerTxEnable := make(chan bool)             //Kanal som kan brukes for å vise at man ikke er tilgjengelig, selvom man kanskje er på nettet
+	stateTx := make(chan *config.Elevator)      //Gjøre denne om til å sende Elevator state
 	stateRx := make(chan *config.Elevator)
 	cabOrder := make(chan *elevio.ButtonEvent)
-	
+
 	go peers.Transmitter(15647, id, peerTxEnable)
 	go peers.Receiver(15647, peerUpdateCh)
 	go bcast.Transmitter(16569, stateTx)
 	go bcast.Receiver(16569, stateRx)
 	go statehandler.HandlePeerUpdates(peerUpdateCh, stateRx)
 	go statehandler.Send(stateTx, &elevator)
-	
-	select{
+	go assigner.Assigner(stateRx, drv_buttons, cabOrder)
 
-	}
+	select {}
 
 }
