@@ -9,7 +9,7 @@ const (
 	NumButtons = 4
 )
 
-var Our_elevator Elevator
+
 var Pair DirnBehaviourPair
 
 type ElevatorBehaviour int
@@ -33,10 +33,10 @@ const (
 )
 
 type Elevator struct {
+	Id        string
 	Floor     int
-	NextDest  int
 	Dirn      elevio.MotorDirection
-	Requests  [4][4]int
+	Requests  [][]int
 	Behaviour ElevatorBehaviour
 
 	Config struct {
@@ -62,10 +62,22 @@ type LocalElevatorState struct {
 	Behave   ElevatorBehaviour
 }
 
-func InitElevState(id string) LocalElevatorState {
-	requests := make([][]RequestState, 4)
+func InitElevState(id string) Elevator {
+	requests := make([][]int, 4)
 	for floor := range requests {
-		requests[floor] = make([]RequestState, 3)
+		requests[floor] = make([]int, 4)
 	}
-	return LocalElevatorState{Requests: requests, ID: id, Floor: 0, Behave: EB_Idle}
+	return Elevator{Id: id,
+		Floor:     0,
+		Dirn:      elevio.MD_Stop,
+		Requests:  requests,
+		Behaviour: EB_Idle,
+		Config: struct {
+			ClearRequestVariant ClearRequestVariant
+			DoorOpenDurationS   float64
+		}{
+			ClearRequestVariant: 0,
+			DoorOpenDurationS:   3.0,
+		},
+	}
 }
