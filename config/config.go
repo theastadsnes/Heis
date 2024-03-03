@@ -34,12 +34,10 @@ const (
 
 type Elevator struct {
 	Floor     int
-	NextDest  int
 	Dirn      elevio.MotorDirection
 	Requests  [4][4]int
 	Behaviour ElevatorBehaviour
 	ID		  string
-	Online	  bool
 
 	Config struct {
 		ClearRequestVariant ClearRequestVariant
@@ -71,3 +69,5 @@ func InitElevState(id string) LocalElevatorState {
 	}
 	return LocalElevatorState{Requests: requests, ID: id, Floor: 0, Behave: EB_Idle}
 }
+
+

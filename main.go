@@ -6,7 +6,9 @@
 package main
 
 import (
+	"Heis/config"
 	"Heis/costfunc"
+	"Heis/singleElev/elevio"
 	"fmt"
 )
 
@@ -42,21 +44,38 @@ func main() {
 
 	*/
 
-	hallRequests := [][2]bool{{false, false}, {true, false}, {false, false}, {false, true}}
-	states := map[string]costfunc.HRAElevState{
-		"one": {
-			Behavior:    "moving",
-			Floor:       2,
-			Direction:   "up",
-			CabRequests: []bool{false, false, false, true},
+	elevators := map[string]config.Elevator{
+		"elevator1": {
+			Floor:     1,
+			Dirn:      elevio.MD_Up,
+			Requests:  [4][4]int{{0, 1, 0}, {0, 0, 0}, {1, 0, 0}, {0, 1, 0}},
+			Behaviour: config.EB_Moving,
+			ID:        "elevator1",
 		},
-		"two": {
-			Behavior:    "idle",
-			Floor:       0,
-			Direction:   "stop",
-			CabRequests: []bool{false, false, false, false},
+		"elevator2": {
+			Floor:     3,
+			Dirn:      elevio.MD_Down,
+			Requests:  [4][4]int{{1, 0, 0}, {0, 1, 0}, {0, 0, 1}, {0, 0, 0}},
+			Behaviour: config.EB_Idle,
+			ID:        "elevator2",
+		},
+		"elevator3": {
+			Floor:     2,
+			Dirn:      elevio.MD_Stop,
+			Requests:  [4][4]int{{0, 0, 1}, {1, 0, 0}, {0, 1, 0}, {0, 0, 0}},
+			Behaviour: config.EB_DoorOpen,
+			ID:        "elevator3",
 		},
 	}
+
+	states := costfunc.TransformElevatorStates(elevators)
+
+	fmt.Println("Transformed Elevator States:")
+	for id, state := range states {
+		fmt.Printf("ID: %s, State: %+v\n", id, state)
+	}
+
+	hallRequests := [][2]bool{{false, false}, {true, false}, {false, false}, {false, true}}
 
 	output, err := costfunc.Costfunc(hallRequests, states)
 	if err != nil {

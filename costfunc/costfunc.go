@@ -1,6 +1,8 @@
 package costfunc
 
 import (
+	"Heis/config"
+	"Heis/singleElev/elevio"
 	"encoding/json"
 	"fmt"
 	"os/exec"
@@ -48,7 +50,7 @@ func Costfunc(hallRequests [][2]bool, states map[string]HRAElevState) (map[strin
 
 func getExecutableName() string {
 	switch runtime.GOOS {
-	case "linux", "darwin":
+	case "linux":
 		return "hall_request_assigner"
 	case "windows":
 		return "hall_request_assigner.exe"
@@ -57,4 +59,49 @@ func getExecutableName() string {
 	}
 }
 
+func TransformElevatorStates(elevators map[string]config.Elevator) map[string]HRAElevState {
+	states := make(map[string]HRAElevState)
 
+	for id, elev := range elevators {
+		cabRequests := make([]bool, len(elev.Requests[0])) // Assuming fixed number of floors
+		for floor := 0; floor < len(elev.Requests[0]); floor++ {
+			// Assuming elev.Requests[floor][BT_Cab] indicates a cab request for that floor
+			cabRequests[floor] = elev.Requests[floor][elevio.BT_Cab] > 0
+		}
+
+		states[id] = HRAElevState{
+			Behavior:    behaviourToString(elev.Behaviour), // Assuming Behaviour has a String method
+			Floor:       elev.Floor,
+			Direction:   dirnToString(elev.Dirn), // Assuming Dirn has a String method or convert manually
+			CabRequests: cabRequests,
+		}
+	}
+
+	return states
+}
+
+func behaviourToString(behaviour config.ElevatorBehaviour) string {
+	switch behaviour {
+	case config.EB_Idle:
+		return "idle"
+	case config.EB_Moving:
+		return "moving"
+	case config.EB_DoorOpen:
+		return "doorOpen"
+	default:
+		return "unknown"
+	}
+}
+
+func dirnToString(dirn elevio.MotorDirection) string {
+	switch dirn {
+	case elevio.MD_Up:
+		return "up"
+	case elevio.MD_Down:
+		return "down"
+	case elevio.MD_Stop:
+		return "stop"
+	default:
+		return "unknown"
+	}
+}
