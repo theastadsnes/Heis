@@ -80,6 +80,25 @@ func TransformElevatorStates(elevators map[string]config.Elevator) map[string]HR
 	return states
 }
 
+func PrepareHallRequests(elevators map[string]config.Elevator) [][2]bool {
+	// Assuming a fixed number of floors for simplicity; adjust as necessary
+	numFloors := 4
+	hallRequests := make([][2]bool, numFloors)
+
+	for _, elev := range elevators {
+		for floor := 0; floor < numFloors; floor++ {
+			if elev.Requests[floor][0] > 0 { // Check for hall up request
+				hallRequests[floor][0] = true
+			}
+			if elev.Requests[floor][1] > 0 { // Check for hall down request
+				hallRequests[floor][1] = true
+			}
+		}
+	}
+
+	return hallRequests
+}
+
 func behaviourToString(behaviour config.ElevatorBehaviour) string {
 	switch behaviour {
 	case config.EB_Idle:

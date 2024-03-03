@@ -75,7 +75,11 @@ func main() {
 		fmt.Printf("ID: %s, State: %+v\n", id, state)
 	}
 
-	hallRequests := [][2]bool{{false, false}, {true, false}, {false, false}, {false, true}}
+	hallRequests := costfunc.PrepareHallRequests(elevators)
+
+	for floor, requests := range hallRequests {
+		fmt.Printf("Floor %d: Up Request: %t, Down Request: %t\n", floor+1, requests[0], requests[1])
+	}
 
 	output, err := costfunc.Costfunc(hallRequests, states)
 	if err != nil {
