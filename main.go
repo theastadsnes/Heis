@@ -71,8 +71,12 @@ func main() {
 	go bcast.Transmitter(16569, stateTx)
 	go bcast.Receiver(16569, stateRx)
 	go statehandler.HandlePeerUpdates(peerUpdateCh, stateRx)
-
 	go statehandler.Send(stateTx, config.Our_elevator)
+	config.Our_elevator = config.InitElevState(id)
+
+	go func (){
+		fmt.Print(config.Our_elevator)
+	}()
 
 	for{
 
