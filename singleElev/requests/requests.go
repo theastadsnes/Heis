@@ -8,7 +8,6 @@ package requests
 import (
 	"Heis/config"
 	"Heis/singleElev/elevio"
-	"fmt"
 )
 
 var Floors int = 4  // Number of floors in the building
@@ -126,8 +125,7 @@ func Clear_request_at_floor(e *config.Elevator) {
  * @param e A pointer to the current state of the elevator.
  */
 func Requests_chooseDirection(e *config.Elevator) {
-	fmt.Printf("retning, inni choose:")
-	fmt.Print(e.Dirn)
+
 	switch e.Dirn {
 	case elevio.MD_Up:
 		if Requests_above(e) {

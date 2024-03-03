@@ -53,10 +53,10 @@ func main() {
 			fmt.Println(err)
 			localIP = "DISCONNECTED"
 		}
-		id = fmt.Sprintf("peer-%s-%d", localIP, os.Getpid())
+		id = fmt.Sprintf("%s-%d", localIP, os.Getpid())
 	}
 
-	elevator := config.InitElevState((id))
+	elevator := config.InitElevState(id)
 	// Start the finite state machine for elevator control
 	go fsm.Fsm(&elevator, drv_buttons, drv_floors, drv_obstr, drv_stop, doorTimer, numFloors)
 
@@ -65,19 +65,17 @@ func main() {
 	//  alive on the network
 	peerUpdateCh := make(chan peers.PeerUpdate)     //Kanal som sender/mottar uppdateringer i Peer structen, om det er noen som kobles fra nettet eller noen nye tilkoblinger
 	peerTxEnable := make(chan bool)                 //Kanal som kan brukes for å vise at man ikke er tilgjengelig, selvom man kanskje er på nettet
-	stateTx := make(chan config.Elevator) //Gjøre denne om til å sende Elevator state
-	stateRx := make(chan config.Elevator)
+	stateTx := make(chan *config.Elevator) //Gjøre denne om til å sende Elevator state
+	stateRx := make(chan *config.Elevator)
 
 	go peers.Transmitter(15647, id, peerTxEnable)
 	go peers.Receiver(15647, peerUpdateCh)
 	go bcast.Transmitter(16569, stateTx)
 	go bcast.Receiver(16569, stateRx)
 	go statehandler.HandlePeerUpdates(peerUpdateCh, stateRx)
-	go statehandler.Send(stateTx, elevator)
+	go statehandler.Send(stateTx, &elevator)
 	
-	
-
-	for{
+	select{
 
 	}
 

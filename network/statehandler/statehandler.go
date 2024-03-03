@@ -8,7 +8,7 @@ import (
 )
 
 
-func Send(stateTx chan config.Elevator, elevator config.Elevator){
+func Send(stateTx chan *config.Elevator, elevator *config.Elevator){
 	for{
 		stateTx <- elevator
 		time.Sleep(1 * time.Second)
@@ -16,7 +16,7 @@ func Send(stateTx chan config.Elevator, elevator config.Elevator){
 	}
 
 	
-func HandlePeerUpdates(peerUpdateCh <-chan peers.PeerUpdate, helloRx <-chan config.Elevator) {
+func HandlePeerUpdates(peerUpdateCh <-chan peers.PeerUpdate, helloRx <-chan *config.Elevator) {
 	fmt.Println("Started")
 	for{
 	select {
