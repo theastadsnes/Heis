@@ -11,26 +11,25 @@ func Assigner(stateRx chan *config.Elevator, buttons chan elevio.ButtonEvent, ca
 	ElevatorsMap := make(map[string]config.Elevator)
 
 	for {
-		fmt.Print("------------------------------------------------NICE")
+		fmt.Println("------------------------------------------------NICE")
 		select {
 		case stateReceived := <-stateRx:
 			ElevatorsMap[stateReceived.Id] = *stateReceived
-			fmt.Print("*******************************", ElevatorsMap)
+			fmt.Println("*******************************", ElevatorsMap)
 
-			
 		case orders := <-buttons:
-			fmt.Print("---------HALLA-------")
+			fmt.Println("---------HALLA-------")
 			if orders.Button == 2 {
 				cabOrder <- &orders
 			} else if orders.Button == 0 || orders.Button == 1 {
 				transStates := costfunc.TransformElevatorStates(ElevatorsMap)
 				hallRequests := costfunc.PrepareHallRequests(ElevatorsMap)
-				newOrders, err := costfunc.Costfunc(hallRequests, transStates)
+				fmt.Print(costfunc.Costfunc(hallRequests, transStates))
 
-				if err != nil {
-					fmt.Print("Panic")
-				}
-				fmt.Print("NEW:", newOrders)
+				// if err != nil {
+				// 	fmt.Println("Panic")
+				// }
+
 				//sende newOrders over en kanal, eks orderChan an typen egendefinert struct
 			}
 		}
