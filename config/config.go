@@ -9,7 +9,6 @@ const (
 	NumButtons = 4
 )
 
-var Our_elevator Elevator
 
 var Pair DirnBehaviourPair
 

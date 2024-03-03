@@ -55,8 +55,10 @@ func main() {
 		}
 		id = fmt.Sprintf("peer-%s-%d", localIP, os.Getpid())
 	}
+
+	elevator := config.InitElevState((id))
 	// Start the finite state machine for elevator control
-	go fsm.Fsm(drv_buttons, drv_floors, drv_obstr, drv_stop, doorTimer, numFloors)
+	go fsm.Fsm(&elevator, drv_buttons, drv_floors, drv_obstr, drv_stop, doorTimer, numFloors)
 
 	
 	// We make a channel for receiving updates on the id's of the peers that are
@@ -71,12 +73,9 @@ func main() {
 	go bcast.Transmitter(16569, stateTx)
 	go bcast.Receiver(16569, stateRx)
 	go statehandler.HandlePeerUpdates(peerUpdateCh, stateRx)
-	go statehandler.Send(stateTx, config.Our_elevator)
-	config.Our_elevator = config.InitElevState(id)
-
-	go func (){
-		fmt.Print(config.Our_elevator)
-	}()
+	go statehandler.Send(stateTx, elevator)
+	
+	
 
 	for{
 
