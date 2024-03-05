@@ -10,6 +10,8 @@ import (
 	"Heis/costfunc"
 	"Heis/singleElev/elevio"
 	"Heis/singleElev/requests"
+	"Heis/statemachines"
+	"fmt"
 	"time"
 )
 
@@ -23,65 +25,24 @@ import (
  * @param numFloors Total number of floors in the building.
  */
 
-func Fsm(elevator *config.Elevator, buttons chan elevio.ButtonEvent, floors chan int, obstr chan bool, stop chan bool, doorTimer *time.Timer, numFloors int, ordersCostfunc chan *costfunc.AssignmentResults) {
+func Fsm(elevator *config.Elevator, buttons chan elevio.ButtonEvent, floors chan int, obstr chan bool, stop chan bool, doorTimer *time.Timer, numFloors int, orderChanRx chan *costfunc.AssignmentResults, orderChanTx chan *costfunc.AssignmentResults, stateRx chan *config.Elevator, stateTx chan *config.Elevator, enAssigner chan bool) {
 	requests.Clear_lights()
 
 	for {
 		select {
 		case order := <-buttons:
-			if !elevio.GetStop() {
-				elevio.SetButtonLamp(order.Button, order.Floor, true)
-				switch {
-				case elevator.Behaviour == config.EB_DoorOpen:
-					if order.Floor == elevator.Floor {
-						elevio.SetDoorOpenLamp(true)
-						requests.Clear_request_at_floor(elevator)
-						doorTimer.Reset(time.Duration(3) * time.Second)
-					} else {
-						elevator.Requests[order.Floor][order.Button] = 1
-					}
-				case elevator.Behaviour == config.EB_Moving:
-					elevator.Requests[order.Floor][order.Button] = 1
-				case elevator.Behaviour == config.EB_Idle:
-					if order.Floor == elevator.Floor {
-						elevio.SetDoorOpenLamp(true)
-						requests.Clear_request_at_floor(elevator)
-						elevator.Behaviour = config.EB_DoorOpen
-						doorTimer.Reset(time.Duration(3) * time.Second)
-					} else {
-						elevator.Requests[order.Floor][order.Button] = 1
-						if requests.Requests_above(elevator) {
-							elevator.Dirn = elevio.MD_Up
-							elevio.SetMotorDirection(elevator.Dirn)
-							elevator.Behaviour = config.EB_Moving
-						} else if requests.Requests_below(elevator) {
-							elevator.Dirn = elevio.MD_Down
-							elevio.SetMotorDirection(elevator.Dirn)
-							elevator.Behaviour = config.EB_Moving
-						}
-					}
-				}
+			if order.Button == 2 {
+				statemachines.CabOrderFSM(elevator, order.Floor, order.Button, doorTimer)
+			} else {
+				enAssigner <- true
+				elevator.Requests[order.Floor][int(order.Button)] = 1
+				//statemachines.AssignerFSM(stateRx, orderChanTx, elevator, order.Floor, order.Button, enAssigner)
+
 			}
 
-		case newAssignedOrders := <-ordersCostfunc:
-			for _, assignments := range (*newAssignedOrders).Assignments {
-				if assignments.ID == elevator.Id {
-					for floor := 0; floor < numFloors; floor++ {
-
-						if assignments.UpRequests[floor] {
-							elevator.Requests[floor][0] = 1
-						} else if !assignments.UpRequests[floor] {
-							elevator.Requests[floor][0] = 0
-
-						}
-						if assignments.DownRequests[floor] {
-							elevator.Requests[floor][1] = 1
-						} else if !assignments.DownRequests[floor] {
-							elevator.Requests[floor][0] = 0
-						}
-					}
-				}
-			}
+		case newAssignedHallOrders := <-orderChanRx:
+			fmt.Println("ASSIGNING HALL ORDER")
+			statemachines.HallOrderFSM(elevator, newAssignedHallOrders, doorTimer)
 
 		case floor := <-floors:
 			elevator.Floor = floor

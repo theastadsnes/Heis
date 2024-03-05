@@ -6,7 +6,8 @@
 package main
 
 import (
-	"Heis/assigner"
+
+	//"Heis/assigner"
 	"Heis/config"
 	"Heis/costfunc"
 	"Heis/network/bcast"
@@ -15,6 +16,7 @@ import (
 	"Heis/network/statehandler"
 	"Heis/singleElev/elevio"
 	"Heis/singleElev/fsm"
+	"Heis/statemachines"
 	"flag"
 	"fmt"
 	"os"
@@ -39,7 +41,7 @@ func main() {
 	numFloors := 4
 	elevator := config.InitElevState(id)
 	// Initialize elevator I/O
-	elevio.Init("localhost:15657", numFloors)
+	elevio.Init("localhost:15000", numFloors)
 
 	// Create channels for elevator I/O events
 	drv_buttons := make(chan elevio.ButtonEvent)
@@ -54,9 +56,10 @@ func main() {
 	peerTxEnable := make(chan bool)             //Kanal som kan brukes for å vise at man ikke er tilgjengelig, selvom man kanskje er på nettet
 	stateTx := make(chan *config.Elevator)      //Gjøre denne om til å sende Elevator state
 	stateRx := make(chan *config.Elevator)
-	cabOrder := make(chan *elevio.ButtonEvent)
+	//cabOrder := make(chan *elevio.ButtonEvent)
 	orderChanTx := make(chan *costfunc.AssignmentResults)
 	orderChanRx := make(chan *costfunc.AssignmentResults)
+	enableAssigner := make(chan bool)
 
 	// Start polling for elevator I/O events
 	go elevio.PollButtons(drv_buttons)
@@ -66,7 +69,6 @@ func main() {
 	go elevio.PollStopButton(drv_stop)
 
 	// Start the finite state machine for elevator control
-	go fsm.Fsm(&elevator, buttons2, drv_floors, drv_obstr, drv_stop, doorTimer, numFloors, orderChanRx)
 
 	// We make a channel for receiving updates on the id's of the peers that are
 	//  alive on the network
@@ -79,8 +81,9 @@ func main() {
 	go bcast.Receiver(16570, orderChanRx)
 	go statehandler.HandlePeerUpdates(peerUpdateCh, stateRx)
 	go statehandler.Send(stateTx, &elevator)
-	go assigner.Assigner(stateRx, drv_buttons, cabOrder, orderChanTx, &elevator)
-
+	//go assigner.Assigner(stateRx, drv_buttons, cabOrder, orderChanTx, &elevator)
+	go statemachines.AssignerFSM(stateRx, orderChanTx, &elevator, enableAssigner)
+	go fsm.Fsm(&elevator, buttons2, drv_floors, drv_obstr, drv_stop, doorTimer, numFloors, orderChanRx, orderChanTx, stateRx, stateTx, enableAssigner)
 	//go assigner.AssigningHallOrders(orderChanRx, &elevator, cabOrder)
 	select {}
 

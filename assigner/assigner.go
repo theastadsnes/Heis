@@ -15,21 +15,22 @@ func Assigner(stateRx chan *config.Elevator, buttons chan elevio.ButtonEvent, ca
 	for {
 		select {
 
-		case orders := <-buttons:
-			if orders.Button == 2 {
-				cabOrder <- &orders
+		case order := <-buttons:
+			if order.Button == 2 {
+				cabOrder <- &order
 			}
-		//else if orders.Button == 0 || orders.Button == 1 {
+
+			fmt.Print("heieiieieieieieieeiieieieiiieie")
+
 		case stateReceived := <-stateRx:
 
 			ElevatorsMap[stateReceived.Id] = *stateReceived
 
 			transStates := costfunc.TransformElevatorStates(ElevatorsMap)
 			hallRequests := costfunc.PrepareHallRequests(ElevatorsMap)
-			fmt.Println(costfunc.GetRequestStruct(hallRequests, transStates))
-			//newOrders := costfunc.GetRequestStruct(hallRequests, transStates)
-
-			//orderChanTx <- &newOrders
+			//fmt.Println(costfunc.GetRequestStruct(hallRequests, transStates))
+			newOrders := costfunc.GetRequestStruct(hallRequests, transStates)
+			orderChanTx <- &newOrders
 		}
 
 	}
