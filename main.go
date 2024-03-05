@@ -25,7 +25,7 @@ func main() {
 	numFloors := 4
 
 	// Initialize elevator I/O
-	elevio.Init("localhost:15000", numFloors)
+	elevio.Init("localhost:15657", numFloors)
 
 	// Create channels for elevator I/O events
 	drv_buttons := make(chan elevio.ButtonEvent)
