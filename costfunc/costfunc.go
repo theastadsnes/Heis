@@ -21,7 +21,16 @@ type HRAInput struct {
 	States       map[string]HRAElevState `json:"states"`
 }
 
-// Costfunc executes the hall_request_assigner with given input and returns the assignment output
+type HallRequestAssignment struct {
+	ID           string
+	UpRequests   []bool
+	DownRequests []bool
+}
+
+type AssignmentResults struct {
+	Assignments []HallRequestAssignment
+}
+
 func Costfunc(hallRequests [][2]bool, states map[string]HRAElevState) (map[string][][2]bool, error) {
 	hraExecutable := getExecutableName()
 
@@ -63,16 +72,15 @@ func TransformElevatorStates(elevators map[string]config.Elevator) map[string]HR
 	states := make(map[string]HRAElevState)
 
 	for id, elev := range elevators {
-		cabRequests := make([]bool, len(elev.Requests[0])) // Assuming fixed number of floors
+		cabRequests := make([]bool, len(elev.Requests[0]))
 		for floor := 0; floor < len(elev.Requests[0]); floor++ {
-			// Assuming elev.Requests[floor][BT_Cab] indicates a cab request for that floor
 			cabRequests[floor] = elev.Requests[floor][elevio.BT_Cab] > 0
 		}
 
 		states[id] = HRAElevState{
-			Behavior:    behaviourToString(elev.Behaviour), // Assuming Behaviour has a String method
+			Behavior:    behaviourToString(elev.Behaviour),
 			Floor:       elev.Floor,
-			Direction:   dirnToString(elev.Dirn), // Assuming Dirn has a String method or convert manually
+			Direction:   dirnToString(elev.Dirn),
 			CabRequests: cabRequests,
 		}
 	}
@@ -81,22 +89,44 @@ func TransformElevatorStates(elevators map[string]config.Elevator) map[string]HR
 }
 
 func PrepareHallRequests(elevators map[string]config.Elevator) [][2]bool {
-	// Assuming a fixed number of floors for simplicity; adjust as necessary
 	numFloors := 4
 	hallRequests := make([][2]bool, numFloors)
 
 	for _, elev := range elevators {
 		for floor := 0; floor < numFloors; floor++ {
-			if elev.Requests[floor][0] > 0 { // Check for hall up request
+			if elev.Requests[floor][0] > 0 {
 				hallRequests[floor][0] = true
 			}
-			if elev.Requests[floor][1] > 0 { // Check for hall down request
+			if elev.Requests[floor][1] > 0 {
 				hallRequests[floor][1] = true
 			}
 		}
 	}
 
 	return hallRequests
+}
+
+func GetRequestStruct(hallRequests [][2]bool, states map[string]HRAElevState) AssignmentResults {
+	output, err := Costfunc(hallRequests, states)
+	if err != nil {
+		fmt.Println("Error calling Costfunc:", err)
+	}
+	var requeststruct AssignmentResults
+
+	for id, floors := range output {
+		var upRequests, downRequests []bool
+		for _, floor := range floors {
+			upRequests = append(upRequests, floor[0])
+			downRequests = append(downRequests, floor[1])
+		}
+		requeststruct.Assignments = append(requeststruct.Assignments, HallRequestAssignment{
+			ID:           id,
+			UpRequests:   upRequests,
+			DownRequests: downRequests,
+		})
+	}
+
+	return requeststruct
 }
 
 func behaviourToString(behaviour config.ElevatorBehaviour) string {

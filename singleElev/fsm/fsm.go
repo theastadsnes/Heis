@@ -7,6 +7,7 @@ package fsm
 
 import (
 	"Heis/config"
+	"Heis/costfunc"
 	"Heis/singleElev/elevio"
 	"Heis/singleElev/requests"
 	"time"
@@ -22,11 +23,8 @@ import (
  * @param numFloors Total number of floors in the building.
  */
 
-
-
-func Fsm(elevator *config.Elevator, buttons chan elevio.ButtonEvent, floors chan int, obstr chan bool, stop chan bool, doorTimer *time.Timer, numFloors int) {
+func Fsm(elevator *config.Elevator, buttons chan elevio.ButtonEvent, floors chan int, obstr chan bool, stop chan bool, doorTimer *time.Timer, numFloors int, ordersCostfunc chan *costfunc.AssignmentResults) {
 	requests.Clear_lights()
-	
 
 	for {
 		select {
@@ -60,6 +58,26 @@ func Fsm(elevator *config.Elevator, buttons chan elevio.ButtonEvent, floors chan
 							elevator.Dirn = elevio.MD_Down
 							elevio.SetMotorDirection(elevator.Dirn)
 							elevator.Behaviour = config.EB_Moving
+						}
+					}
+				}
+			}
+
+		case newAssignedOrders := <-ordersCostfunc:
+			for _, assignments := range (*newAssignedOrders).Assignments {
+				if assignments.ID == elevator.Id {
+					for floor := 0; floor < numFloors; floor++ {
+
+						if assignments.UpRequests[floor] {
+							elevator.Requests[floor][0] = 1
+						} else if !assignments.UpRequests[floor] {
+							elevator.Requests[floor][0] = 0
+
+						}
+						if assignments.DownRequests[floor] {
+							elevator.Requests[floor][1] = 1
+						} else if !assignments.DownRequests[floor] {
+							elevator.Requests[floor][0] = 0
 						}
 					}
 				}

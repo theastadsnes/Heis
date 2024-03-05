@@ -5,35 +5,64 @@ import (
 	"Heis/costfunc"
 	"Heis/singleElev/elevio"
 	"fmt"
+	//"sync"
 )
 
-func Assigner(stateRx chan *config.Elevator, buttons chan elevio.ButtonEvent, cabOrder chan *elevio.ButtonEvent) {
+func Assigner(stateRx chan *config.Elevator, buttons chan elevio.ButtonEvent, cabOrder chan *elevio.ButtonEvent, orderChanTx chan *costfunc.AssignmentResults, elevator *config.Elevator) {
+
 	ElevatorsMap := make(map[string]config.Elevator)
 
 	for {
-		//fmt.Println("------------------------------------------------NICE")
 		select {
-		case stateReceived := <-stateRx:
-			ElevatorsMap[stateReceived.Id] = *stateReceived
-			//fmt.Println("******************************STATEMAP", ElevatorsMap)
 
 		case orders := <-buttons:
-			fmt.Println("---------KNAPP TRYKKET-------")
 			if orders.Button == 2 {
 				cabOrder <- &orders
-			} else if orders.Button == 0 || orders.Button == 1 {
-				transStates := costfunc.TransformElevatorStates(ElevatorsMap)
-				hallRequests := costfunc.PrepareHallRequests(ElevatorsMap)
-				fmt.Print(costfunc.Costfunc(hallRequests, transStates))
-				newOrders := costfunc.AssignOrders(orders, ElevatorsMap)
-
-				// if err != nil {
-				// 	fmt.Println("Panic")
-				// }
-
-				//sende newOrders over en kanal, eks orderChan an typen egendefinert struct
 			}
+		//else if orders.Button == 0 || orders.Button == 1 {
+		case stateReceived := <-stateRx:
+
+			ElevatorsMap[stateReceived.Id] = *stateReceived
+
+			transStates := costfunc.TransformElevatorStates(ElevatorsMap)
+			hallRequests := costfunc.PrepareHallRequests(ElevatorsMap)
+			fmt.Println(costfunc.GetRequestStruct(hallRequests, transStates))
+			//newOrders := costfunc.GetRequestStruct(hallRequests, transStates)
+
+			//orderChanTx <- &newOrders
 		}
 
+	}
+
+}
+
+func AssigningHallOrders(orderChanRx chan *costfunc.AssignmentResults, elevator *config.Elevator, fsmOrders chan *elevio.ButtonEvent) {
+	for {
+		select {
+		case orders := <-orderChanRx:
+			//fmt.Println(orders)
+			for _, assignments := range (*orders).Assignments {
+				for floor := 0; floor < config.NumFloors; floor++ {
+					if assignments.UpRequests[floor] {
+						elevator.Requests[floor][0] = 1
+
+						buttonEvent := elevio.ButtonEvent{
+							Floor:  floor,
+							Button: elevio.BT_HallUp,
+						}
+						fmt.Println("ASSIGNING HALL ORDER", buttonEvent)
+						fsmOrders <- &buttonEvent
+					}
+					if assignments.DownRequests[floor] {
+						elevator.Requests[floor][1] = 1
+						buttonEvent := elevio.ButtonEvent{
+							Floor:  floor,
+							Button: elevio.BT_HallDown,
+						}
+						fsmOrders <- &buttonEvent
+					}
+				}
+			}
+		}
 	}
 }
