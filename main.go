@@ -11,34 +11,21 @@ import (
 	"Heis/config"
 	"Heis/costfunc"
 	"Heis/network/bcast"
-	"Heis/network/localip"
+	//"Heis/network/localip"
 	"Heis/network/peers"
 	"Heis/network/statehandler"
 	"Heis/singleElev/elevio"
 	"Heis/singleElev/fsm"
 
 	//"Heis/statemachines"
-	"flag"
-	"fmt"
-	"os"
+	
 	"time"
 )
 
 func main() {
-	//Define the number of floors in the building
-	var id string
-	flag.StringVar(&id, "id", "", "id of this peer")
-	flag.Parse()
-
-	if id == "" {
-		localIP, err := localip.LocalIP()
-		if err != nil {
-			fmt.Println(err)
-			localIP = "DISCONNECTED"
-		}
-		id = fmt.Sprintf("%s-%d", localIP, os.Getpid())
-	}
-
+	
+	//Initialize
+	id := config.InitId()
 	numFloors := 4
 	elevator := config.InitElevState(id)
 	// Initialize elevator I/O
@@ -49,7 +36,6 @@ func main() {
 	drv_floors := make(chan int)
 	drv_obstr := make(chan bool)
 	drv_stop := make(chan bool)
-	buttons2 := make(chan elevio.ButtonEvent)
 	// Create a timer for the door
 	doorTimer := time.NewTimer(time.Duration(3) * time.Second)
 
@@ -57,22 +43,16 @@ func main() {
 	peerTxEnable := make(chan bool)             //Kanal som kan brukes for å vise at man ikke er tilgjengelig, selvom man kanskje er på nettet
 	stateTx := make(chan *config.Elevator)      //Gjøre denne om til å sende Elevator state
 	stateRx := make(chan *config.Elevator)
-	//cabOrder := make(chan *elevio.ButtonEvent)
 	orderChanTx := make(chan *costfunc.AssignmentResults)
 	orderChanRx := make(chan *costfunc.AssignmentResults)
 	enableAssigner := make(chan bool)
 
 	// Start polling for elevator I/O events
 	go elevio.PollButtons(drv_buttons)
-	go elevio.PollButtons(buttons2)
+
 	go elevio.PollFloorSensor(drv_floors)
 	go elevio.PollObstructionSwitch(drv_obstr)
 	go elevio.PollStopButton(drv_stop)
-
-	// Start the finite state machine for elevator control
-
-	// We make a channel for receiving updates on the id's of the peers that are
-	//  alive on the network
 
 	go peers.Transmitter(15647, id, peerTxEnable)
 	go peers.Receiver(15647, peerUpdateCh)
@@ -82,10 +62,8 @@ func main() {
 	go bcast.Receiver(16570, orderChanRx)
 	go statehandler.HandlePeerUpdates(peerUpdateCh, stateRx)
 	go statehandler.Send(stateTx, &elevator)
-	//go assigner.Assigner(stateRx, drv_buttons, cabOrder, orderChanTx, &elevator)
-	//go statemachines.AssignerFSM(stateRx, orderChanTx, &elevator, enableAssigner)
-	go fsm.Fsm(&elevator, buttons2, drv_floors, drv_obstr, drv_stop, doorTimer, numFloors, orderChanRx, orderChanTx, stateRx, stateTx, enableAssigner)
-	//go assigner.AssigningHallOrders(orderChanRx, &elevator, cabOrder)
+	go fsm.Fsm(&elevator, drv_buttons, drv_floors, drv_obstr, drv_stop, doorTimer, numFloors, orderChanRx, orderChanTx, stateRx, stateTx, enableAssigner)
+
 	select {}
 
 }

@@ -1,14 +1,17 @@
 package config
 
 import (
+	"Heis/network/localip"
 	"Heis/singleElev/elevio"
+	"flag"
+	"fmt"
+	"os"
 )
 
 const (
 	NumFloors  = 4
 	NumButtons = 4
 )
-
 
 var Pair DirnBehaviourPair
 
@@ -80,4 +83,20 @@ func InitElevState(id string) Elevator {
 			DoorOpenDurationS:   3.0,
 		},
 	}
+}
+
+func InitId() string {
+	var id string
+	flag.StringVar(&id, "id", "", "id of this peer")
+	flag.Parse()
+
+	if id == "" {
+		localIP, err := localip.LocalIP()
+		if err != nil {
+			fmt.Println(err)
+			localIP = "DISCONNECTED"
+		}
+		id = fmt.Sprintf("%s-%d", localIP, os.Getpid())
+	}
+	return id
 }

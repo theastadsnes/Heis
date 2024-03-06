@@ -32,22 +32,13 @@ func Fsm(elevator *config.Elevator, buttons chan elevio.ButtonEvent, floors chan
 	for {
 		select {
 		case stateReceived := <-stateRx:
-			//fmt.Println("STATE RECEIVED", stateReceived)
 			ElevatorsMap[stateReceived.Id] = *stateReceived
-			//fmt.Println(ElevatorsMap)
+			
 		case order := <-buttons:
 			if order.Button == 2 {
 				statemachines.CabOrderFSM(elevator, order.Floor, order.Button, doorTimer)
 			} else {
-				elevator.Requests[order.Floor][order.Button] = 1
-				ElevatorsMap[elevator.Id].Requests[order.Floor][order.Button] = 1
-				//statemachines.AssignerFSM(stateRx, orderChanTx, elevator, order.Floor, order.Button, enAssigner)
-				fmt.Println(ElevatorsMap)
-				transStates := costfunc.TransformElevatorStates(ElevatorsMap)
-				hallRequests := costfunc.PrepareHallRequests(ElevatorsMap)
-				newOrders := costfunc.GetRequestStruct(hallRequests, transStates)
-				fmt.Println(newOrders)
-				orderChanTx <- &newOrders
+				statemachines.AssignerFSM(stateRx, orderChanTx, elevator, order.Floor, order.Button, ElevatorsMap)
 
 			}
 
