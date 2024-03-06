@@ -6,30 +6,28 @@
 package main
 
 import (
-
-	//"Heis/assigner"
 	"Heis/config"
+	"Heis/network/peers"
 	"Heis/costfunc"
 	"Heis/network/bcast"
-	//"Heis/network/localip"
-	"Heis/network/peers"
+	
 	"Heis/network/statehandler"
 	"Heis/singleElev/elevio"
 	"Heis/singleElev/fsm"
-
-	//"Heis/statemachines"
-	
 	"time"
+	"Heis/watchdog"
+
 )
 
 func main() {
 	
-	//Initialize
+	// Initialize
 	id := config.InitId()
 	numFloors := 4
 	elevator := config.InitElevState(id)
 	// Initialize elevator I/O
 	elevio.Init("localhost:15657", numFloors)
+	elevatorsMap := make(map[string]config.Elevator)
 
 	// Create channels for elevator I/O events
 	drv_buttons := make(chan elevio.ButtonEvent)
@@ -61,9 +59,10 @@ func main() {
 	go bcast.Transmitter(16570, orderChanTx)
 	go bcast.Receiver(16570, orderChanRx)
 	go statehandler.HandlePeerUpdates(peerUpdateCh, stateRx)
-	go statehandler.Send(stateTx, &elevator)
-	go fsm.Fsm(&elevator, drv_buttons, drv_floors, drv_obstr, drv_stop, doorTimer, numFloors, orderChanRx, orderChanTx, stateRx, stateTx)
-
+	go statehandler.SendElevatorStates(stateTx, &elevator)
+	go watchdog.HandleLostPeers(&elevator, peerUpdateCh, elevatorsMap)
+	go fsm.Fsm(&elevator, drv_buttons, drv_floors, drv_obstr, drv_stop, doorTimer, numFloors, orderChanRx, orderChanTx, stateRx, stateTx, elevatorsMap)
+	
 	select {}
 
 }

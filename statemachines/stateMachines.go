@@ -103,7 +103,8 @@ func HallOrderFSM(elevator *config.Elevator, newAssignedOrders *costfunc.Assignm
 	}
 }
 
-func AssignerFSM(stateRx chan *config.Elevator, orderChanTx chan *costfunc.AssignmentResults, elevator *config.Elevator, orderFloor int, orderButton elevio.ButtonType, elevatorsMap map[string]config.Elevator) {
+//kanskje ha denne i en egen modul, lage en egen funksjon, dette er ikke lenger en FSM
+func AssignHallOrders(stateRx chan *config.Elevator, orderChanTx chan *costfunc.AssignmentResults, elevator *config.Elevator, orderFloor int, orderButton elevio.ButtonType, elevatorsMap map[string]config.Elevator) {
 	elevator.Requests[orderFloor][orderButton] = 1
 	elevatorsMap[elevator.Id].Requests[orderFloor][orderButton] = 1
 

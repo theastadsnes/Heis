@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func Send(stateTx chan *config.Elevator, elevator *config.Elevator) {
+func SendElevatorStates(stateTx chan *config.Elevator, elevator *config.Elevator) {
 	for {
 		stateTx <- elevator
 		time.Sleep(200 * time.Millisecond)
