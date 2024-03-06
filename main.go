@@ -16,7 +16,8 @@ import (
 	"Heis/network/statehandler"
 	"Heis/singleElev/elevio"
 	"Heis/singleElev/fsm"
-	"Heis/statemachines"
+
+	//"Heis/statemachines"
 	"flag"
 	"fmt"
 	"os"
@@ -41,7 +42,7 @@ func main() {
 	numFloors := 4
 	elevator := config.InitElevState(id)
 	// Initialize elevator I/O
-	elevio.Init("localhost:15000", numFloors)
+	elevio.Init("localhost:15657", numFloors)
 
 	// Create channels for elevator I/O events
 	drv_buttons := make(chan elevio.ButtonEvent)
@@ -82,7 +83,7 @@ func main() {
 	go statehandler.HandlePeerUpdates(peerUpdateCh, stateRx)
 	go statehandler.Send(stateTx, &elevator)
 	//go assigner.Assigner(stateRx, drv_buttons, cabOrder, orderChanTx, &elevator)
-	go statemachines.AssignerFSM(stateRx, orderChanTx, &elevator, enableAssigner)
+	//go statemachines.AssignerFSM(stateRx, orderChanTx, &elevator, enableAssigner)
 	go fsm.Fsm(&elevator, buttons2, drv_floors, drv_obstr, drv_stop, doorTimer, numFloors, orderChanRx, orderChanTx, stateRx, stateTx, enableAssigner)
 	//go assigner.AssigningHallOrders(orderChanRx, &elevator, cabOrder)
 	select {}

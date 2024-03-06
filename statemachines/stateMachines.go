@@ -50,7 +50,7 @@ func CabOrderFSM(elevator *config.Elevator, orderFloor int, orderButton elevio.B
 func HallOrderFSM(elevator *config.Elevator, newAssignedOrders *costfunc.AssignmentResults, doorTimer *time.Timer) {
 	//variabler for etasje til de nye ordrene og typen
 	var orderFloor int
-	//var orderButton elevio.ButtonType
+	var orderButton elevio.ButtonType
 
 	for _, assignments := range (*newAssignedOrders).Assignments {
 		if assignments.ID == elevator.Id {
@@ -58,20 +58,21 @@ func HallOrderFSM(elevator *config.Elevator, newAssignedOrders *costfunc.Assignm
 				if assignments.UpRequests[floor] {
 					elevator.Requests[floor][0] = 1
 					orderFloor = floor
-					//orderButton = elevio.BT_HallUp
+					orderButton = elevio.BT_HallUp
 				} else if !assignments.UpRequests[floor] {
 					elevator.Requests[floor][0] = 0
 				}
 				if assignments.DownRequests[floor] {
 					elevator.Requests[floor][1] = 1
 					orderFloor = floor
-					//orderButton = elevio.BT_HallDown
+					orderButton = elevio.BT_HallDown
 				} else if !assignments.DownRequests[floor] {
 					elevator.Requests[floor][1] = 0
 				}
 			}
 		}
 	}
+	elevio.SetButtonLamp(orderButton, orderFloor, true)
 	switch {
 	case elevator.Behaviour == config.EB_DoorOpen:
 		if orderFloor == elevator.Floor {
@@ -102,17 +103,15 @@ func HallOrderFSM(elevator *config.Elevator, newAssignedOrders *costfunc.Assignm
 	}
 }
 
-func AssignerFSM(stateRx chan *config.Elevator, orderChanTx chan *costfunc.AssignmentResults, elevator *config.Elevator, enAssigner chan bool) {
+func AssignerFSM(stateRx chan *config.Elevator, orderChanTx chan *costfunc.AssignmentResults, elevator *config.Elevator) {
+	ElevatorsMap := make(map[string]config.Elevator)
+
 	for {
 		select {
-		case <-enAssigner:
-
 		case stateReceived := <-stateRx:
-
-			ElevatorsMap := make(map[string]config.Elevator)
-
 			//fmt.Println("STATE RECEIVED", stateReceived)
 			ElevatorsMap[stateReceived.Id] = *stateReceived
+
 			fmt.Println(ElevatorsMap)
 			transStates := costfunc.TransformElevatorStates(ElevatorsMap)
 			hallRequests := costfunc.PrepareHallRequests(ElevatorsMap)
