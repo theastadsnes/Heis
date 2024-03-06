@@ -103,12 +103,12 @@ func HallOrderFSM(elevator *config.Elevator, newAssignedOrders *costfunc.Assignm
 	}
 }
 
-func AssignerFSM(stateRx chan *config.Elevator, orderChanTx chan *costfunc.AssignmentResults, elevator *config.Elevator, orderFloor int, orderButton elevio.ButtonType, ElevatorsMap map[string]config.Elevator) {
+func AssignerFSM(stateRx chan *config.Elevator, orderChanTx chan *costfunc.AssignmentResults, elevator *config.Elevator, orderFloor int, orderButton elevio.ButtonType, elevatorsMap map[string]config.Elevator) {
 	elevator.Requests[orderFloor][orderButton] = 1
-	ElevatorsMap[elevator.Id].Requests[orderFloor][orderButton] = 1
+	elevatorsMap[elevator.Id].Requests[orderFloor][orderButton] = 1
 
-	transStates := costfunc.TransformElevatorStates(ElevatorsMap)
-	hallRequests := costfunc.PrepareHallRequests(ElevatorsMap)
+	transStates := costfunc.TransformElevatorStates(elevatorsMap)
+	hallRequests := costfunc.PrepareHallRequests(elevatorsMap)
 	newOrders := costfunc.GetRequestStruct(hallRequests, transStates)
 
 	orderChanTx <- &newOrders

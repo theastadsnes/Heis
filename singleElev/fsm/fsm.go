@@ -25,20 +25,20 @@ import (
  * @param numFloors Total number of floors in the building.
  */
 
-func Fsm(elevator *config.Elevator, buttons chan elevio.ButtonEvent, floors chan int, obstr chan bool, stop chan bool, doorTimer *time.Timer, numFloors int, orderChanRx chan *costfunc.AssignmentResults, orderChanTx chan *costfunc.AssignmentResults, stateRx chan *config.Elevator, stateTx chan *config.Elevator, enAssigner chan bool) {
+func Fsm(elevator *config.Elevator, buttons chan elevio.ButtonEvent, floors chan int, obstr chan bool, stop chan bool, doorTimer *time.Timer, numFloors int, orderChanRx chan *costfunc.AssignmentResults, orderChanTx chan *costfunc.AssignmentResults, stateRx chan *config.Elevator, stateTx chan *config.Elevator) {
 	requests.Clear_lights()
-	ElevatorsMap := make(map[string]config.Elevator)
+	elevatorsMap := make(map[string]config.Elevator)
 
 	for {
 		select {
 		case stateReceived := <-stateRx:
-			ElevatorsMap[stateReceived.Id] = *stateReceived
-			
+			elevatorsMap[stateReceived.Id] = *stateReceived
+
 		case order := <-buttons:
 			if order.Button == 2 {
 				statemachines.CabOrderFSM(elevator, order.Floor, order.Button, doorTimer)
 			} else {
-				statemachines.AssignerFSM(stateRx, orderChanTx, elevator, order.Floor, order.Button, ElevatorsMap)
+				statemachines.AssignerFSM(stateRx, orderChanTx, elevator, order.Floor, order.Button, elevatorsMap)
 
 			}
 

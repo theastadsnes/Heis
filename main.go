@@ -45,7 +45,7 @@ func main() {
 	stateRx := make(chan *config.Elevator)
 	orderChanTx := make(chan *costfunc.AssignmentResults)
 	orderChanRx := make(chan *costfunc.AssignmentResults)
-	enableAssigner := make(chan bool)
+	
 
 	// Start polling for elevator I/O events
 	go elevio.PollButtons(drv_buttons)
@@ -62,7 +62,7 @@ func main() {
 	go bcast.Receiver(16570, orderChanRx)
 	go statehandler.HandlePeerUpdates(peerUpdateCh, stateRx)
 	go statehandler.Send(stateTx, &elevator)
-	go fsm.Fsm(&elevator, drv_buttons, drv_floors, drv_obstr, drv_stop, doorTimer, numFloors, orderChanRx, orderChanTx, stateRx, stateTx, enableAssigner)
+	go fsm.Fsm(&elevator, drv_buttons, drv_floors, drv_obstr, drv_stop, doorTimer, numFloors, orderChanRx, orderChanTx, stateRx, stateTx)
 
 	select {}
 
