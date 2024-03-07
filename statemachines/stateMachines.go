@@ -5,7 +5,6 @@ import (
 	"Heis/costfunc"
 	"Heis/singleElev/elevio"
 	"Heis/singleElev/requests"
-
 	"time"
 	//"fmt"
 )
@@ -59,6 +58,7 @@ func HallOrderFSM(elevator *config.Elevator, newAssignedOrders *costfunc.Assignm
 					elevator.Requests[floor][0] = 1
 					orderFloor = floor
 					orderButton = elevio.BT_HallUp
+					elevio.SetButtonLamp(orderButton, orderFloor, true)
 				} else if !assignments.UpRequests[floor] {
 					elevator.Requests[floor][0] = 0
 				}
@@ -66,13 +66,14 @@ func HallOrderFSM(elevator *config.Elevator, newAssignedOrders *costfunc.Assignm
 					elevator.Requests[floor][1] = 1
 					orderFloor = floor
 					orderButton = elevio.BT_HallDown
+					elevio.SetButtonLamp(orderButton, orderFloor, true)
 				} else if !assignments.DownRequests[floor] {
 					elevator.Requests[floor][1] = 0
 				}
 			}
 		}
 	}
-	elevio.SetButtonLamp(orderButton, orderFloor, true)
+
 	switch {
 	case elevator.Behaviour == config.EB_DoorOpen:
 		if orderFloor == elevator.Floor {
@@ -103,12 +104,14 @@ func HallOrderFSM(elevator *config.Elevator, newAssignedOrders *costfunc.Assignm
 	}
 }
 
-// kanskje ha denne i en egen modul, lage en egen funksjon, dette er ikke lenger en FSM
-func AssignHallOrders(orderChanTx chan *costfunc.AssignmentResults, elevatorsMap map[string]config.Elevator) {
-	//elevator.Requests[orderFloor][orderButton] = 1
-	//elevatorsMap[elevator.Id].Requests[orderFloor][orderButton] = 1
-	transStates := costfunc.TransformElevatorStates(elevatorsMap)
-	hallRequests := costfunc.PrepareHallRequests(elevatorsMap)
+func AssignHallOrders(orderChanTx chan *costfunc.AssignmentResults, ElevatorsMap map[string]config.Elevator) {
+	// elevator.Requests[orderFloor][orderButton] = 1
+	// ElevatorsMap[elevator.Id].Requests[orderFloor][orderButton] = 1
+
+	transStates := costfunc.TransformElevatorStates(ElevatorsMap)
+	hallRequests := costfunc.PrepareHallRequests(ElevatorsMap)
 	newOrders := costfunc.GetRequestStruct(hallRequests, transStates)
+
 	orderChanTx <- &newOrders
+
 }

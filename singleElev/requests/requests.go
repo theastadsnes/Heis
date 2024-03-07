@@ -69,11 +69,19 @@ func Should_stop(e *config.Elevator) bool {
 		switch {
 		case e.Dirn == elevio.MD_Down:
 			if e.Requests[e.Floor][elevio.BT_HallUp] == 1 && Requests_below(e) {
-				return false
+				if e.Requests[e.Floor][elevio.BT_HallDown] == 1 {
+					return true
+				} else {
+					return false
+				}
 			}
 		case e.Dirn == elevio.MD_Up:
 			if e.Requests[e.Floor][elevio.BT_HallDown] == 1 && Requests_above(e) {
-				return false
+				if e.Requests[e.Floor][elevio.BT_HallUp] == 1 {
+					return true
+				} else {
+					return false
+				}
 			}
 
 		}
@@ -116,7 +124,12 @@ func Clear_request_at_floor(e *config.Elevator) {
 			e.Requests[e.Floor][int(elevio.BT_HallUp)] = 0
 			elevio.SetButtonLamp(elevio.BT_HallUp, e.Floor, false)
 		}
-	
+	case e.Dirn == elevio.MD_Stop:
+		e.Requests[e.Floor][int(elevio.BT_HallDown)] = 0
+		e.Requests[e.Floor][int(elevio.BT_HallUp)] = 0
+		elevio.SetButtonLamp(elevio.BT_HallUp, e.Floor, false)
+		elevio.SetButtonLamp(elevio.BT_HallDown, e.Floor, false)
+
 	}
 }
 
