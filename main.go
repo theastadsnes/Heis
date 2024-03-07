@@ -10,11 +10,11 @@ import (
 	"Heis/costfunc"
 	"Heis/network/bcast"
 	"Heis/network/peers"
+	"Heis/watchdog"
 
 	"Heis/network/statehandler"
 	"Heis/singleElev/elevio"
 	"Heis/singleElev/fsm"
-	"Heis/watchdog"
 	"time"
 )
 
@@ -25,7 +25,7 @@ func main() {
 	numFloors := 4
 	elevator := config.InitElevState(id)
 	// Initialize elevator I/O
-	elevio.Init("localhost:15657", numFloors)
+	elevio.Init("localhost:15600", numFloors)
 	elevatorsMap := make(map[string]config.Elevator)
 
 	// Create channels for elevator I/O events
@@ -50,8 +50,8 @@ func main() {
 	go elevio.PollObstructionSwitch(drv_obstr)
 	go elevio.PollStopButton(drv_stop)
 
-	go peers.Transmitter(15647, id, peerTxEnable)
-	go peers.Receiver(15647, peerUpdateCh)
+	go peers.Transmitter(15800, id, peerTxEnable)
+	go peers.Receiver(15800, peerUpdateCh)
 	go bcast.Transmitter(16569, stateTx)
 	go bcast.Receiver(16569, stateRx)
 	go bcast.Transmitter(16570, orderChanTx)

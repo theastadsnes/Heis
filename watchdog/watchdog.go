@@ -27,12 +27,12 @@ func WatchDog(elevator *config.Elevator, peers chan peers.PeerUpdate, elevatorsM
 				statemachines.AssignHallOrders(orderChanTx, elevatorsMap)
 
 			}
-			if len(peersUpdate.New) != 0 {
+			/*if len(peersUpdate.New) != 0 {
 				if contains(peersUpdate.Peers, elevator.Id) {
 					elevatorsMap[elevator.Id] = *elevator
 				}
 				statemachines.AssignHallOrders(orderChanTx, elevatorsMap)
-			}
+			}*/
 
 		}
 	}
