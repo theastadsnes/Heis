@@ -7,20 +7,19 @@ package main
 
 import (
 	"Heis/config"
-	"Heis/network/peers"
 	"Heis/costfunc"
 	"Heis/network/bcast"
-	
+	"Heis/network/peers"
+
 	"Heis/network/statehandler"
 	"Heis/singleElev/elevio"
 	"Heis/singleElev/fsm"
-	"time"
 	"Heis/watchdog"
-
+	"time"
 )
 
 func main() {
-	
+
 	// Initialize
 	id := config.InitId()
 	numFloors := 4
@@ -43,7 +42,6 @@ func main() {
 	stateRx := make(chan *config.Elevator)
 	orderChanTx := make(chan *costfunc.AssignmentResults)
 	orderChanRx := make(chan *costfunc.AssignmentResults)
-	
 
 	// Start polling for elevator I/O events
 	go elevio.PollButtons(drv_buttons)
@@ -60,9 +58,9 @@ func main() {
 	go bcast.Receiver(16570, orderChanRx)
 	go statehandler.HandlePeerUpdates(peerUpdateCh, stateRx)
 	go statehandler.SendElevatorStates(stateTx, &elevator)
-	go watchdog.HandleLostPeers(&elevator, peerUpdateCh, elevatorsMap)
+	go watchdog.WatchDog(&elevator, peerUpdateCh, elevatorsMap, orderChanTx)
 	go fsm.Fsm(&elevator, drv_buttons, drv_floors, drv_obstr, drv_stop, doorTimer, numFloors, orderChanRx, orderChanTx, stateRx, stateTx, elevatorsMap)
-	
+
 	select {}
 
 }

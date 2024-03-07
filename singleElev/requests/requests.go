@@ -116,7 +116,7 @@ func Clear_request_at_floor(e *config.Elevator) {
 			e.Requests[e.Floor][int(elevio.BT_HallUp)] = 0
 			elevio.SetButtonLamp(elevio.BT_HallUp, e.Floor, false)
 		}
-
+	
 	}
 }
 

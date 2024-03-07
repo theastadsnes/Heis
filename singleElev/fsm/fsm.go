@@ -38,8 +38,10 @@ func Fsm(elevator *config.Elevator, buttons chan elevio.ButtonEvent, floors chan
 			if order.Button == 2 {
 				statemachines.CabOrderFSM(elevator, order.Floor, order.Button, doorTimer)
 			} else {
-				statemachines.AssignHallOrders(stateRx, orderChanTx, elevator, order.Floor, order.Button, elevatorsMap)
 
+				elevator.Requests[order.Floor][order.Button] = 1
+				elevatorsMap[elevator.Id].Requests[order.Floor][order.Button] = 1
+				statemachines.AssignHallOrders(orderChanTx, elevatorsMap)
 			}
 
 		case newAssignedHallOrders := <-orderChanRx:
