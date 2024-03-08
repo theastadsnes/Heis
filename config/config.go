@@ -41,8 +41,7 @@ type Elevator struct {
 	Dirn      elevio.MotorDirection
 	Requests  [][]int
 	Behaviour ElevatorBehaviour
-	PowerLoss bool
-	
+
 	Config struct {
 		ClearRequestVariant ClearRequestVariant
 		DoorOpenDurationS   float64
@@ -71,12 +70,20 @@ func InitElevState(id string) Elevator {
 	for floor := range requests {
 		requests[floor] = make([]int, 4)
 	}
+
+	floor := 0
+	for elevio.GetFloor() == -1 {
+		elevio.SetMotorDirection(elevio.MD_Down)
+	}
+
+	elevio.SetMotorDirection(elevio.MD_Stop)
+	floor = elevio.GetFloor()
+
 	return Elevator{Id: id,
-		Floor:     0,
+		Floor:     floor,
 		Dirn:      elevio.MD_Stop,
 		Requests:  requests,
 		Behaviour: EB_Idle,
-		PowerLoss: true,
 		Config: struct {
 			ClearRequestVariant ClearRequestVariant
 			DoorOpenDurationS   float64
