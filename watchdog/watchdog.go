@@ -20,6 +20,10 @@ func WatchDogLostPeers(elevator *config.Elevator, peers chan peers.PeerUpdate, e
 	for {
 		select {
 		case peersUpdate := <-peers:
+			fmt.Printf("Peer update:\n")
+			fmt.Printf("  Peers:    %q\n", peersUpdate.Peers)
+			fmt.Printf("  New:      %q\n", peersUpdate.New)
+			fmt.Printf("  Lost:     %q\n", peersUpdate.Lost)
 			if len(peersUpdate.Lost) != 0 {
 				addToLostElevatorsMap(peersUpdate, elevatorsMap, lostElevatorsStates)
 				transferOrders(elevator, peersUpdate, lostElevatorsStates)
@@ -31,6 +35,11 @@ func WatchDogLostPeers(elevator *config.Elevator, peers chan peers.PeerUpdate, e
 				lostElevatorsStates = make(map[string]config.Elevator) //Overskrive et tomt map på lostPeersmapet
 				statemachines.AssignHallOrders(orderChanTx, elevatorsMap)
 
+			}
+
+			if len(peersUpdate.New) != 0 {
+
+				statemachines.AssignHallOrders(orderChanTx, elevatorsMap)
 			}
 
 		}

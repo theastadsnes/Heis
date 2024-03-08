@@ -61,6 +61,7 @@ func HallOrderFSM(elevator *config.Elevator, newAssignedOrders *costfunc.Assignm
 					elevio.SetButtonLamp(orderButton, orderFloor, true)
 				} else if !assignments.UpRequests[floor] {
 					elevator.Requests[floor][0] = 0
+					elevio.SetButtonLamp(elevio.BT_HallUp, floor, false)
 				}
 				if assignments.DownRequests[floor] {
 					elevator.Requests[floor][1] = 1
@@ -69,6 +70,7 @@ func HallOrderFSM(elevator *config.Elevator, newAssignedOrders *costfunc.Assignm
 					elevio.SetButtonLamp(orderButton, orderFloor, true)
 				} else if !assignments.DownRequests[floor] {
 					elevator.Requests[floor][1] = 0
+					elevio.SetButtonLamp(elevio.BT_HallDown, floor, false)
 				}
 			}
 		}

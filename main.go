@@ -11,6 +11,7 @@ import (
 	"Heis/network/bcast"
 	"Heis/network/peers"
 	"Heis/watchdog"
+	"fmt"
 
 	"Heis/network/statehandler"
 	"Heis/singleElev/elevio"
@@ -24,7 +25,9 @@ func main() {
 	id := config.InitId()
 	numFloors := 4
 
-	elevio.Init("localhost:15657", numFloors)
+	fmt.Println(id)
+
+	elevio.Init("localhost:15001", numFloors)
 	//var elevator config.Elevator
 	elevator := config.InitElevState(id)
 	// Initialize elevator I/O
@@ -46,6 +49,11 @@ func main() {
 	orderChanTx := make(chan *costfunc.AssignmentResults)
 	orderChanRx := make(chan *costfunc.AssignmentResults)
 
+	// go func() {
+	// 	peers := <-peerUpdateCh
+	// 	fmt.Printf("Peeeers: %+v", peers)
+	// }()
+
 	// Start polling for elevator I/O events
 	go elevio.PollButtons(drv_buttons)
 
@@ -53,16 +61,16 @@ func main() {
 	go elevio.PollObstructionSwitch(drv_obstr)
 	go elevio.PollStopButton(drv_stop)
 
-	go peers.Transmitter(15800, id, peerTxEnable)
-	go peers.Receiver(15800, peerUpdateCh)
-	go bcast.Transmitter(16569, stateTx)
-	go bcast.Receiver(16569, stateRx)
+	go peers.Transmitter(23853, id, peerTxEnable)
+	go peers.Receiver(23853, peerUpdateCh)
+	go bcast.Transmitter(16563, stateTx)
+	go bcast.Receiver(16563, stateRx)
 	go bcast.Transmitter(16570, orderChanTx)
 	go bcast.Receiver(16570, orderChanRx)
-	go statehandler.HandlePeerUpdates(peerUpdateCh, stateRx)
+	//go statehandler.HandlePeerUpdates(peerUpdateCh, stateRx)
 	go statehandler.SendElevatorStates(stateTx, &elevator)
 	go watchdog.WatchDogLostPeers(&elevator, peerUpdateCh, elevatorsMap, orderChanTx)
-	go watchdog.WatchdogNewPeers(peerUpdateCh, elevatorsMap, orderChanTx)
+	//go watchdog.WatchdogNewPeers(peerUpdateCh, elevatorsMap, orderChanTx)
 	go fsm.Fsm(&elevator, drv_buttons, drv_floors, drv_obstr, drv_stop, doorTimer, numFloors, orderChanRx, orderChanTx, stateRx, stateTx, elevatorsMap)
 
 	watchdog.ReadFromBackup(drv_buttons)
