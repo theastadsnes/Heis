@@ -8,7 +8,7 @@ import (
 	"fmt"
 )
 
-func WatchDog(elevator *config.Elevator, peers chan peers.PeerUpdate, elevatorsMap map[string]config.Elevator, orderChanTx chan *costfunc.AssignmentResults) {
+func WatchDogLostPeers(elevator *config.Elevator, peers chan peers.PeerUpdate, elevatorsMap map[string]config.Elevator, orderChanTx chan *costfunc.AssignmentResults, lostElevatorCabOrders map[string]config.Elevator) {
 
 	var lostElevatorsStates map[string]config.Elevator = make(map[string]config.Elevator)
 
@@ -16,7 +16,7 @@ func WatchDog(elevator *config.Elevator, peers chan peers.PeerUpdate, elevatorsM
 		select {
 		case peersUpdate := <-peers:
 			if len(peersUpdate.Lost) != 0 {
-				addToLostElevatorsMap(peersUpdate, elevatorsMap, lostElevatorsStates)
+				addToLostElevatorsMap(peersUpdate, elevatorsMap, lostElevatorsStates, lostElevatorCabOrders)
 				transferOrders(elevator, peersUpdate, lostElevatorsStates)
 
 				if contains(peersUpdate.Peers, elevator.Id) {
@@ -27,13 +27,29 @@ func WatchDog(elevator *config.Elevator, peers chan peers.PeerUpdate, elevatorsM
 				statemachines.AssignHallOrders(orderChanTx, elevatorsMap)
 
 			}
-			/*if len(peersUpdate.New) != 0 {
-				if contains(peersUpdate.Peers, elevator.Id) {
-					elevatorsMap[elevator.Id] = *elevator
+
+		}
+	}
+}
+
+func WatchdogNewPeers(peers chan peers.PeerUpdate, elevatorsMap map[string]config.Elevator, orderChanTx chan *costfunc.AssignmentResults, lostElevatorsCabOrders map[string]config.Elevator, lostCabOrdersTx chan *map[string]config.Elevator) {
+	//på en eller annen måte gi beskjed om at hvis de mistede cabordersene er utført eller ikke .
+
+	for {
+		select {
+		case peersUpdate := <-peers:
+			if len(peersUpdate.New) != 0 {
+				for _, lostElevators := range lostElevatorsCabOrders {
+					if peersUpdate.New == lostElevators.Id {
+						if elevatorsMap[peersUpdate.New].PowerLoss {
+							sendCabOrders(lostElevatorsCabOrders, peersUpdate.New, lostCabOrdersTx)
+						} else {
+							delete(lostElevatorsCabOrders, peersUpdate.New)
+						}
+					}
 				}
 				statemachines.AssignHallOrders(orderChanTx, elevatorsMap)
-			}*/
-
+			}
 		}
 	}
 }
@@ -48,9 +64,10 @@ func contains(slice []string, val string) bool {
 	return false
 }
 
-func addToLostElevatorsMap(peersUpdate peers.PeerUpdate, elevatorsMap, lostElevatorsStates map[string]config.Elevator) {
+func addToLostElevatorsMap(peersUpdate peers.PeerUpdate, elevatorsMap, lostElevatorsStates map[string]config.Elevator, lostElevatorCabOrders map[string]config.Elevator) {
 	for _, lostPeerID := range peersUpdate.Lost {
 		lostElevatorsStates[lostPeerID] = elevatorsMap[lostPeerID]
+		lostElevatorCabOrders[lostPeerID] = elevatorsMap[lostPeerID]
 		delete(elevatorsMap, lostPeerID)
 		fmt.Printf("Heis med ID %s er tapt. Tilstanden er lagret og heisen er fjernet fra elevatorsMap.\n", lostPeerID)
 	}
@@ -70,4 +87,11 @@ func transferOrders(elevator *config.Elevator, peersUpdate peers.PeerUpdate, los
 			}
 		}
 	}
+}
+
+func sendCabOrders(lostElevatorCabOrders map[string]config.Elevator, newPeerId string, lostCabOrdersTx chan *map[string]config.Elevator) {
+
+	lostCabOrdersTx <- &lostElevatorCabOrders
+	delete(lostElevatorCabOrders, newPeerId)
+
 }

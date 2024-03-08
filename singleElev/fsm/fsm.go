@@ -25,7 +25,7 @@ import (
  * @param numFloors Total number of floors in the building.
  */
 
-func Fsm(elevator *config.Elevator, buttons chan elevio.ButtonEvent, floors chan int, obstr chan bool, stop chan bool, doorTimer *time.Timer, numFloors int, orderChanRx chan *costfunc.AssignmentResults, orderChanTx chan *costfunc.AssignmentResults, stateRx chan *config.Elevator, stateTx chan *config.Elevator, elevatorsMap map[string]config.Elevator) {
+func Fsm(elevator *config.Elevator, buttons chan elevio.ButtonEvent, floors chan int, obstr chan bool, stop chan bool, doorTimer *time.Timer, numFloors int, orderChanRx chan *costfunc.AssignmentResults, orderChanTx chan *costfunc.AssignmentResults, stateRx chan *config.Elevator, stateTx chan *config.Elevator, elevatorsMap map[string]config.Elevator, lostCabOrdersRx chan  *map[string]config.Elevator) {
 	requests.Clear_lights()
 	//elevatorsMap := make(map[string]config.Elevator)
 
@@ -38,12 +38,20 @@ func Fsm(elevator *config.Elevator, buttons chan elevio.ButtonEvent, floors chan
 			if order.Button == 2 {
 				statemachines.CabOrderFSM(elevator, order.Floor, order.Button, doorTimer)
 			} else {
-
-				elevator.Requests[order.Floor][order.Button] = 1
 				elevatorsMap[elevator.Id].Requests[order.Floor][order.Button] = 1
 				statemachines.AssignHallOrders(orderChanTx, elevatorsMap)
 			}
 
+		case newCabOrders := <- lostCabOrdersRx:
+			for _, lostElevs := range *newCabOrders{
+				if elevator.Id == lostElevs.Id{
+					for floor := 0; floor < numFloors; floor++ {
+						elevator.Requests[floor][2] = lostElevs.Requests[floor][2]
+						statemachines.CabOrderFSM(elevator, floor, 2, doorTimer)
+					}
+				}
+			}
+			
 		case newAssignedHallOrders := <-orderChanRx:
 			fmt.Println("ASSIGNING HALL ORDER")
 			statemachines.HallOrderFSM(elevator, newAssignedHallOrders, doorTimer)

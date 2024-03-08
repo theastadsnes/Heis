@@ -27,6 +27,7 @@ func main() {
 	// Initialize elevator I/O
 	elevio.Init("localhost:15600", numFloors)
 	elevatorsMap := make(map[string]config.Elevator)
+	var lostElevatorCabOrders map[string]config.Elevator = make(map[string]config.Elevator)
 
 	// Create channels for elevator I/O events
 	drv_buttons := make(chan elevio.ButtonEvent)
@@ -42,6 +43,8 @@ func main() {
 	stateRx := make(chan *config.Elevator)
 	orderChanTx := make(chan *costfunc.AssignmentResults)
 	orderChanRx := make(chan *costfunc.AssignmentResults)
+	lostCabOrdersTx := make(chan *map[string]config.Elevator)
+	lostCabOrdersRx := make(chan *map[string]config.Elevator)
 
 	// Start polling for elevator I/O events
 	go elevio.PollButtons(drv_buttons)
@@ -58,8 +61,9 @@ func main() {
 	go bcast.Receiver(16570, orderChanRx)
 	go statehandler.HandlePeerUpdates(peerUpdateCh, stateRx)
 	go statehandler.SendElevatorStates(stateTx, &elevator)
-	go watchdog.WatchDog(&elevator, peerUpdateCh, elevatorsMap, orderChanTx)
-	go fsm.Fsm(&elevator, drv_buttons, drv_floors, drv_obstr, drv_stop, doorTimer, numFloors, orderChanRx, orderChanTx, stateRx, stateTx, elevatorsMap)
+	go watchdog.WatchDogLostPeers(&elevator, peerUpdateCh, elevatorsMap, orderChanTx, lostElevatorCabOrders)
+	go watchdog.WatchdogNewPeers(peerUpdateCh, elevatorsMap, orderChanTx, lostElevatorCabOrders, lostCabOrdersTx)
+	go fsm.Fsm(&elevator, drv_buttons, drv_floors, drv_obstr, drv_stop, doorTimer, numFloors, orderChanRx, orderChanTx, stateRx, stateTx, elevatorsMap, lostCabOrdersRx)
 
 	select {}
 
