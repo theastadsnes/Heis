@@ -112,14 +112,10 @@ func Clear_request_at_floor(e *config.Elevator, doorTimer *time.Timer) {
 
 	switch {
 	case e.Dirn == elevio.MD_Up:
-		if Requests_above(e) {
-			e.Requests[e.Floor][int(elevio.BT_HallUp)] = 0
+		e.Requests[e.Floor][int(elevio.BT_HallUp)] = 0
 
-		}
 		if !Requests_above(e) {
 			e.Requests[e.Floor][int(elevio.BT_HallDown)] = 0
-			doorTimer.Reset(time.Duration(3) * time.Second)
-
 		}
 
 	case e.Dirn == elevio.MD_Down:
@@ -138,7 +134,7 @@ func Clear_request_at_floor(e *config.Elevator, doorTimer *time.Timer) {
 
 		}
 		if !Requests_above(e) && !Requests_below(e) {
-			doorTimer.Reset(time.Duration(3) * time.Second)
+			e.Requests[e.Floor][int(elevio.BT_HallUp)] = 0
 		}
 
 	}
