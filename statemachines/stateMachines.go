@@ -46,47 +46,49 @@ func CabOrderFSM(elevator *config.Elevator, orderFloor int, orderButton elevio.B
 
 }
 
-func HallOrderFSM(elevator *config.Elevator, newAssignedOrders *costfunc.AssignmentResults, doorTimer *time.Timer) {
-	//variabler for etasje til de nye ordrene og typen
-	var orderFloor int
-	//var orderButton elevio.ButtonType
+func updateHallOrders(elevator *config.Elevator, orderFloor [config.NumFloors][config.NumButtons-2]bool,  newAssignedOrders *costfunc.AssignmentResults){
 
-	for _, assignments := range (*newAssignedOrders).Assignments {
+for _, assignments := range (*newAssignedOrders).Assignments {
 		if assignments.ID == elevator.Id {
 			for floor := 0; floor < config.NumFloors; floor++ {
 				if assignments.UpRequests[floor] {
-					elevator.Requests[floor][0] = 1
-					orderFloor = floor
-					//orderButton = elevio.BT_HallUp
-					//elevio.SetButtonLamp(orderButton, orderFloor, true)
+					elevator.Requests[floor][elevio.BT_HallUp] = 1
+					orderFloor[floor][elevio.BT_HallUp] = true
+					
 				} else if !assignments.UpRequests[floor] {
-					elevator.Requests[floor][0] = 0
-					//elevio.SetButtonLamp(elevio.BT_HallUp, floor, false)
+					elevator.Requests[floor][elevio.BT_HallUp] = 0
+					
 				}
 				if assignments.DownRequests[floor] {
-					elevator.Requests[floor][1] = 1
-					orderFloor = floor
-					//orderButton = elevio.BT_HallDown
-					//elevio.SetButtonLamp(orderButton, orderFloor, true)
+					elevator.Requests[floor][elevio.BT_HallDown] = 1
+					orderFloor[floor][elevio.BT_HallDown] = true
+					
+					
 				} else if !assignments.DownRequests[floor] {
-					elevator.Requests[floor][1] = 0
-					//elevio.SetButtonLamp(elevio.BT_HallDown, floor, false)
+					elevator.Requests[floor][elevio.BT_HallDown] = 0
+					
 				}
 			}
 		}
 	}
+}
+func HallOrderFSM(elevator *config.Elevator, newAssignedOrders *costfunc.AssignmentResults, doorTimer *time.Timer) {
+	
+	var orderFloor[config.NumFloors][config.NumButtons-2]bool
+	updateHallOrders(elevator, orderFloor, newAssignedOrders)
 
-	switch {
+	for floor := 0; floor < config.NumFloors; floor++ {
+		for button := 0; button <config.NumButtons-2; button++{
+			switch {
 	case elevator.Behaviour == config.EB_DoorOpen:
-		if orderFloor == elevator.Floor {
+		if floor == elevator.Floor {
 			elevio.SetDoorOpenLamp(true)
 			requests.Clear_request_at_floor(elevator)
 			doorTimer.Reset(time.Duration(3) * time.Second)
 		}
-	case elevator.Behaviour == config.EB_Moving:
-
+	
 	case elevator.Behaviour == config.EB_Idle:
-		if orderFloor == elevator.Floor {
+		if floor == elevator.Floor {
 			elevio.SetDoorOpenLamp(true)
 			requests.Clear_request_at_floor(elevator)
 			elevator.Behaviour = config.EB_DoorOpen
@@ -104,6 +106,9 @@ func HallOrderFSM(elevator *config.Elevator, newAssignedOrders *costfunc.Assignm
 		}
 
 	}
+		}
+	}
+	
 }
 
 func AssignHallOrders(orderChanTx chan *costfunc.AssignmentResults, ElevatorsMap map[string]config.Elevator) {
