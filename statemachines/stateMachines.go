@@ -49,7 +49,7 @@ func CabOrderFSM(elevator *config.Elevator, orderFloor int, orderButton elevio.B
 func HallOrderFSM(elevator *config.Elevator, newAssignedOrders *costfunc.AssignmentResults, doorTimer *time.Timer) {
 	//variabler for etasje til de nye ordrene og typen
 	var orderFloor int
-	var orderButton elevio.ButtonType
+	//var orderButton elevio.ButtonType
 
 	for _, assignments := range (*newAssignedOrders).Assignments {
 		if assignments.ID == elevator.Id {
@@ -57,7 +57,7 @@ func HallOrderFSM(elevator *config.Elevator, newAssignedOrders *costfunc.Assignm
 				if assignments.UpRequests[floor] {
 					elevator.Requests[floor][0] = 1
 					orderFloor = floor
-					orderButton = elevio.BT_HallUp
+					//orderButton = elevio.BT_HallUp
 					//elevio.SetButtonLamp(orderButton, orderFloor, true)
 				} else if !assignments.UpRequests[floor] {
 					elevator.Requests[floor][0] = 0
@@ -66,7 +66,7 @@ func HallOrderFSM(elevator *config.Elevator, newAssignedOrders *costfunc.Assignm
 				if assignments.DownRequests[floor] {
 					elevator.Requests[floor][1] = 1
 					orderFloor = floor
-					orderButton = elevio.BT_HallDown
+					//orderButton = elevio.BT_HallDown
 					//elevio.SetButtonLamp(orderButton, orderFloor, true)
 				} else if !assignments.DownRequests[floor] {
 					elevator.Requests[floor][1] = 0
@@ -118,15 +118,22 @@ func AssignHallOrders(orderChanTx chan *costfunc.AssignmentResults, ElevatorsMap
 }
 
 func UpdateLights(elevator *config.Elevator, elevatorsMap map[string]config.Elevator) {
+
+	var lights[config.NumFloors][config.NumButtons-2]bool
+
 	for _, id := range elevatorsMap {
 		for floor := range id.Requests {
 			for button := 0; button < 2; button++ {
 				if id.Requests[floor][button] == 1 {
-					elevio.SetButtonLamp(elevio.ButtonType(button), floor, true)
-				} else {
-					elevio.SetButtonLamp(elevio.ButtonType(button), floor, false)
-				}
+					lights[floor][button] = true
+				}  
 			}
+		}
+		
+	}
+	for floor := 0; floor < config.NumFloors; floor++ {
+		for button := 0; button < config.NumButtons-2; button++ {
+			elevio.SetButtonLamp(elevio.ButtonType(button), floor, lights[floor][button])
 		}
 	}
 }
