@@ -89,7 +89,7 @@ func Fsm(elevator *config.Elevator, buttons chan elevio.ButtonEvent, floors chan
 			}
 
 		case <-motorFaultTimer.C:
-			if elevator.Behaviour != config.EB_Idle {
+			if requests.HasRequests() {
 				peerTxEnable <- false
 			}
 
