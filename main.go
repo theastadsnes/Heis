@@ -41,6 +41,7 @@ func main() {
 	drv_stop := make(chan bool)
 	// Create a timer for the door
 	doorTimer := time.NewTimer(time.Duration(3) * time.Second)
+	motorFaultTimer := time.NewTimer(time.Second * 4)
 
 	peerUpdateCh := make(chan peers.PeerUpdate) //Kanal som sender/mottar uppdateringer i Peer structen, om det er noen som kobles fra nettet eller noen nye tilkoblinger
 	peerTxEnable := make(chan bool)             //Kanal som kan brukes for å vise at man ikke er tilgjengelig, selvom man kanskje er på nettet
@@ -71,7 +72,7 @@ func main() {
 	go statehandler.SendElevatorStates(stateTx, &elevator)
 	go watchdog.WatchDogLostPeers(&elevator, peerUpdateCh, elevatorsMap, orderChanTx)
 	//go watchdog.WatchdogNewPeers(peerUpdateCh, elevatorsMap, orderChanTx)
-	go fsm.Fsm(&elevator, drv_buttons, drv_floors, drv_obstr, drv_stop, doorTimer, numFloors, orderChanRx, orderChanTx, stateRx, stateTx, elevatorsMap)
+	go fsm.Fsm(&elevator, drv_buttons, drv_floors, drv_obstr, drv_stop, doorTimer, numFloors, orderChanRx, orderChanTx, stateRx, stateTx, elevatorsMap, motorFaultTimer, peerTxEnable)
 
 	watchdog.ReadFromBackup(drv_buttons)
 

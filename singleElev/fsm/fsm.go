@@ -26,7 +26,7 @@ import (
  * @param numFloors Total number of floors in the building.
  */
 
-func Fsm(elevator *config.Elevator, buttons chan elevio.ButtonEvent, floors chan int, obstr chan bool, stop chan bool, doorTimer *time.Timer, numFloors int, orderChanRx chan *costfunc.AssignmentResults, orderChanTx chan *costfunc.AssignmentResults, stateRx chan *config.Elevator, stateTx chan *config.Elevator, elevatorsMap map[string]config.Elevator) {
+func Fsm(elevator *config.Elevator, buttons chan elevio.ButtonEvent, floors chan int, obstr chan bool, stop chan bool, doorTimer *time.Timer, numFloors int, orderChanRx chan *costfunc.AssignmentResults, orderChanTx chan *costfunc.AssignmentResults, stateRx chan *config.Elevator, stateTx chan *config.Elevator, elevatorsMap map[string]config.Elevator, motorFaultTimer *time.Timer, peerTxEnable chan bool) {
 	requests.Clear_lights()
 	//elevatorsMap := make(map[string]config.Elevator)
 
@@ -50,10 +50,11 @@ func Fsm(elevator *config.Elevator, buttons chan elevio.ButtonEvent, floors chan
 			statemachines.HallOrderFSM(elevator, newAssignedHallOrders, doorTimer)
 
 		case floor := <-floors:
+			peerTxEnable <- true
 			elevator.Floor = floor
-			
+			motorFaultTimer.Reset(time.Second * 4)
 			elevio.SetFloorIndicator(floor)
-			
+
 			if requests.Should_stop(elevator) {
 				elevio.SetMotorDirection(elevio.MD_Stop)
 				elevio.SetDoorOpenLamp(true)
@@ -61,7 +62,6 @@ func Fsm(elevator *config.Elevator, buttons chan elevio.ButtonEvent, floors chan
 				elevator.Behaviour = config.EB_DoorOpen
 				doorTimer.Reset(time.Duration(3) * time.Second)
 			}
-
 		case <-doorTimer.C:
 			elevio.SetDoorOpenLamp(false)
 			switch {
@@ -85,6 +85,9 @@ func Fsm(elevator *config.Elevator, buttons chan elevio.ButtonEvent, floors chan
 					doorTimer.Reset(time.Duration(3) * time.Second)
 				}
 			}
+
+		case <-motorFaultTimer.C:
+			peerTxEnable <- false
 
 		case a := <-stop:
 			if a {
