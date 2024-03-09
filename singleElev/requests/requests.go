@@ -8,6 +8,7 @@ package requests
 import (
 	"Heis/config"
 	"Heis/singleElev/elevio"
+	"time"
 )
 
 var Floors int = 4  // Number of floors in the building
@@ -105,32 +106,43 @@ func Clear_lights() {
  * @brief Clears requests and button lights at the current floor.
  * @param e A pointer to the current state of the elevator.
  */
-func Clear_request_at_floor(e *config.Elevator) {
+func Clear_request_at_floor(e *config.Elevator, doorTimer *time.Timer) {
 	e.Requests[e.Floor][int(elevio.BT_Cab)] = 0
 	elevio.SetButtonLamp(elevio.BT_Cab, e.Floor, false)
 
 	switch {
 	case e.Dirn == elevio.MD_Up:
-		e.Requests[e.Floor][int(elevio.BT_HallUp)] = 0
-		//elevio.SetButtonLamp(elevio.BT_HallUp, e.Floor, false)
+		if Requests_above(e) {
+			e.Requests[e.Floor][int(elevio.BT_HallUp)] = 0
+
+		}
 		if !Requests_above(e) {
 			e.Requests[e.Floor][int(elevio.BT_HallDown)] = 0
-			//elevio.SetButtonLamp(elevio.BT_HallDown, e.Floor, false)
+			doorTimer.Reset(time.Duration(3) * time.Second)
+
 		}
+
 	case e.Dirn == elevio.MD_Down:
 		e.Requests[e.Floor][int(elevio.BT_HallDown)] = 0
-		//elevio.SetButtonLamp(elevio.BT_HallDown, e.Floor, false)
+
 		if !Requests_below(e) {
 			e.Requests[e.Floor][int(elevio.BT_HallUp)] = 0
-			//elevio.SetButtonLamp(elevio.BT_HallUp, e.Floor, false)
+
 		}
 	case e.Dirn == elevio.MD_Stop:
-		e.Requests[e.Floor][int(elevio.BT_HallDown)] = 0
-		e.Requests[e.Floor][int(elevio.BT_HallUp)] = 0
-		//elevio.SetButtonLamp(elevio.BT_HallUp, e.Floor, false)
-		//elevio.SetButtonLamp(elevio.BT_HallDown, e.Floor, false)
+		if Requests_above(e) {
+			e.Requests[e.Floor][int(elevio.BT_HallUp)] = 0
+		}
+		if Requests_below(e) {
+			e.Requests[e.Floor][int(elevio.BT_HallDown)] = 0
+
+		}
+		if !Requests_above(e) && !Requests_below(e) {
+			doorTimer.Reset(time.Duration(3) * time.Second)
+		}
 
 	}
+
 }
 
 /**

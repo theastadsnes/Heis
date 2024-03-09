@@ -51,13 +51,13 @@ func Fsm(elevator *config.Elevator, buttons chan elevio.ButtonEvent, floors chan
 
 		case floor := <-floors:
 			elevator.Floor = floor
-			if elevio.GetFloor() != -1 {
-				elevio.SetFloorIndicator(floor)
-			}
+			
+			elevio.SetFloorIndicator(floor)
+			
 			if requests.Should_stop(elevator) {
 				elevio.SetMotorDirection(elevio.MD_Stop)
 				elevio.SetDoorOpenLamp(true)
-				requests.Clear_request_at_floor(elevator)
+				requests.Clear_request_at_floor(elevator, doorTimer)
 				elevator.Behaviour = config.EB_DoorOpen
 				doorTimer.Reset(time.Duration(3) * time.Second)
 			}
@@ -107,7 +107,7 @@ func Fsm(elevator *config.Elevator, buttons chan elevio.ButtonEvent, floors chan
 				}
 			} else {
 				requests.Clear_lights()
-				requests.Clear_request_at_floor(elevator)
+				requests.Clear_request_at_floor(elevator, doorTimer)
 				elevio.SetStopLamp(false)
 
 				if elevator.Behaviour != config.EB_Moving {
