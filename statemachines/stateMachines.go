@@ -16,7 +16,7 @@ func CabOrderFSM(elevator *config.Elevator, orderFloor int, orderButton elevio.B
 		case elevator.Behaviour == config.EB_DoorOpen:
 			if orderFloor == elevator.Floor {
 				elevio.SetDoorOpenLamp(true)
-				requests.Clear_request_at_floor(elevator)
+				requests.Clear_request_at_floor(elevator, doorTimer)
 				doorTimer.Reset(time.Duration(3) * time.Second)
 			} else {
 				elevator.Requests[orderFloor][orderButton] = 1
@@ -26,7 +26,7 @@ func CabOrderFSM(elevator *config.Elevator, orderFloor int, orderButton elevio.B
 		case elevator.Behaviour == config.EB_Idle:
 			if orderFloor == elevator.Floor {
 				elevio.SetDoorOpenLamp(true)
-				requests.Clear_request_at_floor(elevator)
+				requests.Clear_request_at_floor(elevator, doorTimer)
 				elevator.Behaviour = config.EB_DoorOpen
 				doorTimer.Reset(time.Duration(3) * time.Second)
 			} else {
@@ -85,14 +85,14 @@ func HallOrderFSM(elevator *config.Elevator, newAssignedOrders *costfunc.Assignm
 
 					if floor == elevator.Floor {
 						elevio.SetDoorOpenLamp(true)
-						requests.Clear_request_at_floor(elevator)
+						requests.Clear_request_at_floor(elevator, doorTimer)
 						doorTimer.Reset(time.Duration(3) * time.Second)
 					}
 
 				case elevator.Behaviour == config.EB_Idle:
 					if floor == elevator.Floor {
 						elevio.SetDoorOpenLamp(true)
-						requests.Clear_request_at_floor(elevator)
+						requests.Clear_request_at_floor(elevator, doorTimer)
 						elevator.Behaviour = config.EB_DoorOpen
 						doorTimer.Reset(time.Duration(3) * time.Second)
 					} else {
