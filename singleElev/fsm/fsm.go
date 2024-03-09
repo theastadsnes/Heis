@@ -35,7 +35,7 @@ func Fsm(elevator *config.Elevator, buttons chan elevio.ButtonEvent, floors chan
 		case stateReceived := <-stateRx:
 			elevatorsMap[stateReceived.Id] = *stateReceived
 			statemachines.UpdateLights(elevator, elevatorsMap)
-			
+
 		case order := <-buttons:
 			if order.Button == 2 {
 				statemachines.CabOrderFSM(elevator, order.Floor, order.Button, doorTimer)
@@ -51,6 +51,9 @@ func Fsm(elevator *config.Elevator, buttons chan elevio.ButtonEvent, floors chan
 
 		case floor := <-floors:
 			elevator.Floor = floor
+			if elevio.GetFloor() != -1 {
+				elevio.SetFloorIndicator(floor)
+			}
 			if requests.Should_stop(elevator) {
 				elevio.SetMotorDirection(elevio.MD_Stop)
 				elevio.SetDoorOpenLamp(true)

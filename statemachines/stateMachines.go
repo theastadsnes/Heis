@@ -5,7 +5,6 @@ import (
 	"Heis/costfunc"
 	"Heis/singleElev/elevio"
 	"Heis/singleElev/requests"
-	"fmt"
 	"time"
 	//"fmt"
 )
@@ -80,40 +79,39 @@ func HallOrderFSM(elevator *config.Elevator, newAssignedOrders *costfunc.Assignm
 
 	for floor := 0; floor < config.NumFloors; floor++ {
 		for button := 0; button < config.NumButtons-2; button++ {
+			if orderFloor[floor][button] {
+				switch {
+				case elevator.Behaviour == config.EB_DoorOpen:
 
-			switch {
-			case elevator.Behaviour == config.EB_DoorOpen:
-
-				if floor == elevator.Floor {
-					elevio.SetDoorOpenLamp(true)
-					requests.Clear_request_at_floor(elevator)
-					doorTimer.Reset(time.Duration(3) * time.Second)
-				}
-
-			case elevator.Behaviour == config.EB_Idle:
-				fmt.Println("CASE idle")
-				if floor == elevator.Floor {
-					elevio.SetDoorOpenLamp(true)
-					requests.Clear_request_at_floor(elevator)
-					elevator.Behaviour = config.EB_DoorOpen
-					doorTimer.Reset(time.Duration(3) * time.Second)
-				} else {
-					if requests.Requests_above(elevator) {
-						elevator.Dirn = elevio.MD_Up
-						elevio.SetMotorDirection(elevator.Dirn)
-						elevator.Behaviour = config.EB_Moving
-					} else if requests.Requests_below(elevator) {
-						elevator.Dirn = elevio.MD_Down
-						elevio.SetMotorDirection(elevator.Dirn)
-						elevator.Behaviour = config.EB_Moving
+					if floor == elevator.Floor {
+						elevio.SetDoorOpenLamp(true)
+						requests.Clear_request_at_floor(elevator)
+						doorTimer.Reset(time.Duration(3) * time.Second)
 					}
-				}
 
+				case elevator.Behaviour == config.EB_Idle:
+					if floor == elevator.Floor {
+						elevio.SetDoorOpenLamp(true)
+						requests.Clear_request_at_floor(elevator)
+						elevator.Behaviour = config.EB_DoorOpen
+						doorTimer.Reset(time.Duration(3) * time.Second)
+					} else {
+						if requests.Requests_above(elevator) {
+							elevator.Dirn = elevio.MD_Up
+							elevio.SetMotorDirection(elevator.Dirn)
+							elevator.Behaviour = config.EB_Moving
+						} else if requests.Requests_below(elevator) {
+							elevator.Dirn = elevio.MD_Down
+							elevio.SetMotorDirection(elevator.Dirn)
+							elevator.Behaviour = config.EB_Moving
+						}
+					}
+
+				}
 			}
 		}
 	}
 }
-
 func AssignHallOrders(orderChanTx chan *costfunc.AssignmentResults, ElevatorsMap map[string]config.Elevator) {
 	// elevator.Requests[orderFloor][orderButton] = 1
 	// ElevatorsMap[elevator.Id].Requests[orderFloor][orderButton] = 1
