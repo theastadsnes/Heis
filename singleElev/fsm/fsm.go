@@ -34,7 +34,8 @@ func Fsm(elevator *config.Elevator, buttons chan elevio.ButtonEvent, floors chan
 		select {
 		case stateReceived := <-stateRx:
 			elevatorsMap[stateReceived.Id] = *stateReceived
-
+			statemachines.UpdateLights(elevator, elevatorsMap)
+			
 		case order := <-buttons:
 			if order.Button == 2 {
 				statemachines.CabOrderFSM(elevator, order.Floor, order.Button, doorTimer)

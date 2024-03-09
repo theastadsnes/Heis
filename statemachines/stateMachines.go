@@ -58,19 +58,19 @@ func HallOrderFSM(elevator *config.Elevator, newAssignedOrders *costfunc.Assignm
 					elevator.Requests[floor][0] = 1
 					orderFloor = floor
 					orderButton = elevio.BT_HallUp
-					elevio.SetButtonLamp(orderButton, orderFloor, true)
+					//elevio.SetButtonLamp(orderButton, orderFloor, true)
 				} else if !assignments.UpRequests[floor] {
 					elevator.Requests[floor][0] = 0
-					elevio.SetButtonLamp(elevio.BT_HallUp, floor, false)
+					//elevio.SetButtonLamp(elevio.BT_HallUp, floor, false)
 				}
 				if assignments.DownRequests[floor] {
 					elevator.Requests[floor][1] = 1
 					orderFloor = floor
 					orderButton = elevio.BT_HallDown
-					elevio.SetButtonLamp(orderButton, orderFloor, true)
+					//elevio.SetButtonLamp(orderButton, orderFloor, true)
 				} else if !assignments.DownRequests[floor] {
 					elevator.Requests[floor][1] = 0
-					elevio.SetButtonLamp(elevio.BT_HallDown, floor, false)
+					//elevio.SetButtonLamp(elevio.BT_HallDown, floor, false)
 				}
 			}
 		}
@@ -113,7 +113,20 @@ func AssignHallOrders(orderChanTx chan *costfunc.AssignmentResults, ElevatorsMap
 	transStates := costfunc.TransformElevatorStates(ElevatorsMap)
 	hallRequests := costfunc.PrepareHallRequests(ElevatorsMap)
 	newOrders := costfunc.GetRequestStruct(hallRequests, transStates)
-
 	orderChanTx <- &newOrders
 
+}
+
+func UpdateLights(elevator *config.Elevator, elevatorsMap map[string]config.Elevator) {
+	for _, id := range elevatorsMap {
+		for floor := range id.Requests {
+			for button := 0; button < 2; button++ {
+				if id.Requests[floor][button] == 1 {
+					elevio.SetButtonLamp(elevio.ButtonType(button), floor, true)
+				} else {
+					elevio.SetButtonLamp(elevio.ButtonType(button), floor, false)
+				}
+			}
+		}
+	}
 }

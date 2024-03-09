@@ -112,23 +112,23 @@ func Clear_request_at_floor(e *config.Elevator) {
 	switch {
 	case e.Dirn == elevio.MD_Up:
 		e.Requests[e.Floor][int(elevio.BT_HallUp)] = 0
-		elevio.SetButtonLamp(elevio.BT_HallUp, e.Floor, false)
+		//elevio.SetButtonLamp(elevio.BT_HallUp, e.Floor, false)
 		if !Requests_above(e) {
 			e.Requests[e.Floor][int(elevio.BT_HallDown)] = 0
-			elevio.SetButtonLamp(elevio.BT_HallDown, e.Floor, false)
+			//elevio.SetButtonLamp(elevio.BT_HallDown, e.Floor, false)
 		}
 	case e.Dirn == elevio.MD_Down:
 		e.Requests[e.Floor][int(elevio.BT_HallDown)] = 0
-		elevio.SetButtonLamp(elevio.BT_HallDown, e.Floor, false)
+		//elevio.SetButtonLamp(elevio.BT_HallDown, e.Floor, false)
 		if !Requests_below(e) {
 			e.Requests[e.Floor][int(elevio.BT_HallUp)] = 0
-			elevio.SetButtonLamp(elevio.BT_HallUp, e.Floor, false)
+			//elevio.SetButtonLamp(elevio.BT_HallUp, e.Floor, false)
 		}
 	case e.Dirn == elevio.MD_Stop:
 		e.Requests[e.Floor][int(elevio.BT_HallDown)] = 0
 		e.Requests[e.Floor][int(elevio.BT_HallUp)] = 0
-		elevio.SetButtonLamp(elevio.BT_HallUp, e.Floor, false)
-		elevio.SetButtonLamp(elevio.BT_HallDown, e.Floor, false)
+		//elevio.SetButtonLamp(elevio.BT_HallUp, e.Floor, false)
+		//elevio.SetButtonLamp(elevio.BT_HallDown, e.Floor, false)
 
 	}
 }
