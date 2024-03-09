@@ -47,15 +47,19 @@ func Fsm(elevator *config.Elevator, buttons chan elevio.ButtonEvent, floors chan
 
 		case newAssignedHallOrders := <-orderChanRx:
 			fmt.Println("ASSIGNING HALL ORDER")
-			statemachines.HallOrderFSM(elevator, newAssignedHallOrders, doorTimer)
+			statemachines.HallOrderFSM(elevator, newAssignedHallOrders, doorTimer, motorFaultTimer)
 
 		case floor := <-floors:
 			peerTxEnable <- true
 			elevator.Floor = floor
 
-			motorFaultTimer.Reset(time.Second * 4)
-
 			elevio.SetFloorIndicator(floor)
+			motorFaultTimer.Reset(time.Second * 4)
+			fmt.Println(elevator.Dirn)
+
+			if elevator.Dirn == elevio.MD_Stop {
+				motorFaultTimer.Stop()
+			}
 
 			if requests.Should_stop(elevator) {
 				elevio.SetMotorDirection(elevio.MD_Stop)
@@ -63,7 +67,9 @@ func Fsm(elevator *config.Elevator, buttons chan elevio.ButtonEvent, floors chan
 				requests.Clear_request_at_floor(elevator, doorTimer)
 				elevator.Behaviour = config.EB_DoorOpen
 				doorTimer.Reset(time.Duration(3) * time.Second)
+
 			}
+
 		case <-doorTimer.C:
 			elevio.SetDoorOpenLamp(false)
 			switch {
@@ -72,8 +78,10 @@ func Fsm(elevator *config.Elevator, buttons chan elevio.ButtonEvent, floors chan
 				elevio.SetMotorDirection(elevator.Dirn)
 				if elevator.Dirn == elevio.MD_Stop {
 					elevator.Behaviour = config.EB_Idle
+					motorFaultTimer.Stop()
 				} else {
 					elevator.Behaviour = config.EB_Moving
+					motorFaultTimer.Reset(time.Second * 4)
 				}
 			}
 
@@ -89,9 +97,7 @@ func Fsm(elevator *config.Elevator, buttons chan elevio.ButtonEvent, floors chan
 			}
 
 		case <-motorFaultTimer.C:
-			if requests.HasRequests() {
-				peerTxEnable <- false
-			}
+			peerTxEnable <- false
 
 		case a := <-stop:
 			if a {

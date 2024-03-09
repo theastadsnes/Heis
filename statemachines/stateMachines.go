@@ -72,7 +72,7 @@ func updateHallOrders(elevator *config.Elevator, orderFloor *[config.NumFloors][
 	}
 }
 
-func HallOrderFSM(elevator *config.Elevator, newAssignedOrders *costfunc.AssignmentResults, doorTimer *time.Timer) {
+func HallOrderFSM(elevator *config.Elevator, newAssignedOrders *costfunc.AssignmentResults, doorTimer *time.Timer, motorFaultTimer *time.Timer) {
 
 	var orderFloor [config.NumFloors][config.NumButtons - 2]bool
 	updateHallOrders(elevator, &orderFloor, newAssignedOrders)
@@ -100,10 +100,12 @@ func HallOrderFSM(elevator *config.Elevator, newAssignedOrders *costfunc.Assignm
 							elevator.Dirn = elevio.MD_Up
 							elevio.SetMotorDirection(elevator.Dirn)
 							elevator.Behaviour = config.EB_Moving
+
 						} else if requests.Requests_below(elevator) {
 							elevator.Dirn = elevio.MD_Down
 							elevio.SetMotorDirection(elevator.Dirn)
 							elevator.Behaviour = config.EB_Moving
+							motorFaultTimer.Reset(time.Second * 4)
 						}
 					}
 
