@@ -27,7 +27,7 @@ func main() {
 
 	fmt.Println(id)
 
-	elevio.Init("localhost:15657", numFloors)
+	elevio.Init("localhost:15002", numFloors)
 	//var elevator config.Elevator
 	elevator := config.InitElevState(id)
 	// Initialize elevator I/O

@@ -35,6 +35,7 @@ func CabOrderFSM(elevator *config.Elevator, orderFloor int, orderButton elevio.B
 					elevator.Dirn = elevio.MD_Up
 					elevio.SetMotorDirection(elevator.Dirn)
 					elevator.Behaviour = config.EB_Moving
+
 				} else if requests.Requests_below(elevator) {
 					elevator.Dirn = elevio.MD_Down
 					elevio.SetMotorDirection(elevator.Dirn)
@@ -100,7 +101,7 @@ func HallOrderFSM(elevator *config.Elevator, newAssignedOrders *costfunc.Assignm
 							elevator.Dirn = elevio.MD_Up
 							elevio.SetMotorDirection(elevator.Dirn)
 							elevator.Behaviour = config.EB_Moving
-
+							motorFaultTimer.Reset(time.Second * 4)
 						} else if requests.Requests_below(elevator) {
 							elevator.Dirn = elevio.MD_Down
 							elevio.SetMotorDirection(elevator.Dirn)

@@ -33,10 +33,12 @@ func Fsm(elevator *config.Elevator, buttons chan elevio.ButtonEvent, floors chan
 	for {
 		select {
 		case stateReceived := <-stateRx:
+
 			elevatorsMap[stateReceived.Id] = *stateReceived
 			statemachines.UpdateLights(elevator, elevatorsMap)
 
 		case order := <-buttons:
+			peerTxEnable <- true
 			if order.Button == 2 {
 				statemachines.CabOrderFSM(elevator, order.Floor, order.Button, doorTimer)
 			} else {
@@ -67,7 +69,7 @@ func Fsm(elevator *config.Elevator, buttons chan elevio.ButtonEvent, floors chan
 				requests.Clear_request_at_floor(elevator, doorTimer)
 				elevator.Behaviour = config.EB_DoorOpen
 				doorTimer.Reset(time.Duration(3) * time.Second)
-
+				motorFaultTimer.Stop()
 			}
 
 		case <-doorTimer.C:
@@ -97,6 +99,7 @@ func Fsm(elevator *config.Elevator, buttons chan elevio.ButtonEvent, floors chan
 			}
 
 		case <-motorFaultTimer.C:
+			fmt.Println("MOTORFAULT")
 			peerTxEnable <- false
 
 		case a := <-stop:
