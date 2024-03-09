@@ -179,3 +179,15 @@ func Clear_all_requests(numFloors int, e *config.Elevator) {
 		}
 	}
 }
+
+func HasRequests(elevator *config.Elevator) bool {
+	for floor := 0; floor < config.NumFloors; floor++ {
+		for button := 0; button < config.NumButtons-2; button++ {
+			if elevator.Requests[floor][button] == 1 {
+				return true
+			}
+		}
+	}
+
+	return false
+}

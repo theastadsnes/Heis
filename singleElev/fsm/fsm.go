@@ -52,7 +52,9 @@ func Fsm(elevator *config.Elevator, buttons chan elevio.ButtonEvent, floors chan
 		case floor := <-floors:
 			peerTxEnable <- true
 			elevator.Floor = floor
+
 			motorFaultTimer.Reset(time.Second * 4)
+
 			elevio.SetFloorIndicator(floor)
 
 			if requests.Should_stop(elevator) {
@@ -87,7 +89,9 @@ func Fsm(elevator *config.Elevator, buttons chan elevio.ButtonEvent, floors chan
 			}
 
 		case <-motorFaultTimer.C:
-			peerTxEnable <- false
+			if elevator.Behaviour != config.EB_Idle {
+				peerTxEnable <- false
+			}
 
 		case a := <-stop:
 			if a {
