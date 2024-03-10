@@ -120,8 +120,6 @@ func HallOrderFSM(elevator *config.Elevator, newAssignedOrders *costfunc.Assignm
 	}
 }
 func AssignHallOrders(orderChanTx chan *costfunc.AssignmentResults, ElevatorsMap map[string]config.Elevator) {
-	// elevator.Requests[orderFloor][orderButton] = 1
-	// ElevatorsMap[elevator.Id].Requests[orderFloor][orderButton] = 1
 
 	transStates := costfunc.TransformElevatorStates(ElevatorsMap)
 	hallRequests := costfunc.PrepareHallRequests(ElevatorsMap)
