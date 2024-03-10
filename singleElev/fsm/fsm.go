@@ -38,7 +38,7 @@ func Fsm(elevator *config.Elevator, buttons chan elevio.ButtonEvent, floors chan
 			statemachines.UpdateLights(elevator, elevatorsMap)
 
 		case order := <-buttons:
-			peerTxEnable <- true
+			//peerTxEnable <- true
 			if order.Button == 2 {
 				statemachines.CabOrderFSM(elevator, order.Floor, order.Button, doorTimer)
 			} else {
@@ -84,7 +84,9 @@ func Fsm(elevator *config.Elevator, buttons chan elevio.ButtonEvent, floors chan
 						elevator.Behaviour = config.EB_Idle
 					} else {
 						elevator.Behaviour = config.EB_Moving
+						motorFaultTimer.Reset(time.Second * 4)
 					}
+
 				}
 
 			} else {

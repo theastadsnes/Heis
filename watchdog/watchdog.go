@@ -33,13 +33,17 @@ func WatchDogLostPeers(elevator *config.Elevator, peers chan peers.PeerUpdate, e
 				}
 				//Her har jeg tenkt at vi må oppdatere elevatorsmapet før det sendes i kostfunksjonen igjen fordå nå har jo
 				lostElevatorsStates = make(map[string]config.Elevator) //Overskrive et tomt map på lostPeersmapet
-				statemachines.AssignHallOrders(orderChanTx, elevatorsMap)
+				if elevator.Id == peersUpdate.Peers[0] {
+					statemachines.AssignHallOrders(orderChanTx, elevatorsMap)
+				}
 
 			}
 
 			if len(peersUpdate.New) != 0 {
 
-				statemachines.AssignHallOrders(orderChanTx, elevatorsMap)
+				if elevator.Id == peersUpdate.Peers[0] {
+					statemachines.AssignHallOrders(orderChanTx, elevatorsMap)
+				}
 			}
 
 		}
@@ -85,8 +89,19 @@ func transferOrders(elevator *config.Elevator, peersUpdate peers.PeerUpdate, los
 				if elevator.Id == peersUpdate.Peers[0] { //Velger den første peeren som er online til å ta over ordrene
 					if lostElev.Requests[floor][button] == 1 {
 						elevator.Requests[floor][button] = 1
+
+					}
+
+				}
+				for _, id := range peersUpdate.Lost {
+					if elevator.Id == id {
+						if lostElev.Requests[floor][button] == 1 {
+							elevator.Requests[floor][button] = 0
+
+						}
 					}
 				}
+
 				//hvordan kan man sjekke om man selv er den heisen som har mistet internettforbindelsen
 
 			}
