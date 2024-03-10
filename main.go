@@ -21,7 +21,7 @@ import (
 
 func main() {
 
-	// Initialize
+	// Initialize elev
 	id := config.InitId()
 	numFloors := 4
 
