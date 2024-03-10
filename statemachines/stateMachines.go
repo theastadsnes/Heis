@@ -14,7 +14,7 @@ import (
 func CabOrderFSM(elevator *config.Elevator, orderFloor int, orderButton elevio.ButtonType, doorTimer *time.Timer) {
 	if !elevio.GetStop() {
 		elevio.SetButtonLamp(orderButton, orderFloor, true)
-		
+
 		switch {
 		case elevator.Behaviour == config.EB_DoorOpen:
 			if orderFloor == elevator.Floor {
@@ -125,8 +125,8 @@ func AssignHallOrders(orderChanTx chan *costfunc.AssignmentResults, ElevatorsMap
 	transStates := costfunc.TransformElevatorStates(ElevatorsMap)
 	hallRequests := costfunc.PrepareHallRequests(ElevatorsMap)
 	newOrders := costfunc.GetRequestStruct(hallRequests, transStates)
-	orderChanTx <- &newOrders
-	packetloss.WaitForAllACKs(orderChanTx, ElevatorsMap, ackChanRx, newOrders)
+	//orderChanTx <- &newOrders
+	go packetloss.WaitForAllACKs(orderChanTx, ElevatorsMap, ackChanRx, newOrders)
 
 }
 
