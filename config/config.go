@@ -41,8 +41,8 @@ type Elevator struct {
 	Dirn      elevio.MotorDirection
 	Requests  [][]int
 	Behaviour ElevatorBehaviour
-
-	Config struct {
+	IsOnline  bool
+	Config    struct {
 		ClearRequestVariant ClearRequestVariant
 		DoorOpenDurationS   float64
 	}
@@ -84,6 +84,7 @@ func InitElevState(id string) Elevator {
 		Dirn:      elevio.MD_Stop,
 		Requests:  requests,
 		Behaviour: EB_Idle,
+		IsOnline:  true,
 		Config: struct {
 			ClearRequestVariant ClearRequestVariant
 			DoorOpenDurationS   float64

@@ -45,7 +45,11 @@ func Fsm(elevator *config.Elevator, buttons chan elevio.ButtonEvent, floors chan
 				//elevator.Requests[order.Floor][order.Button] = 1
 				elevatorsMapCopy := elevatorsMap
 				elevatorsMapCopy[elevator.Id].Requests[order.Floor][order.Button] = 1
-				statemachines.AssignHallOrders(orderChanTx, elevatorsMapCopy, ackChanRx)
+
+				if elevator.IsOnline {
+					statemachines.AssignHallOrders(orderChanTx, elevatorsMapCopy, ackChanRx)
+				}
+
 			}
 
 		case newAssignedHallOrders := <-orderChanRx:

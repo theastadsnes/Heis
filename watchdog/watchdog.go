@@ -24,21 +24,26 @@ func WatchDogLostPeers(elevator *config.Elevator, peers chan peers.PeerUpdate, e
 			fmt.Printf("  Peers:    %q\n", peersUpdate.Peers)
 			fmt.Printf("  New:      %q\n", peersUpdate.New)
 			fmt.Printf("  Lost:     %q\n", peersUpdate.Lost)
-			if len(peersUpdate.Lost) != 0 {
-				addToLostElevatorsMap(peersUpdate, elevatorsMap, lostElevatorsStates)
-				transferOrders(elevator, peersUpdate, lostElevatorsStates)
+			if len(peersUpdate.Peers) != 0 {
+				elevator.IsOnline = true
+				
+				if len(peersUpdate.Lost) != 0 {
+					addToLostElevatorsMap(peersUpdate, elevatorsMap, lostElevatorsStates)
+					transferOrders(elevator, peersUpdate, lostElevatorsStates)
 
-				if contains(peersUpdate.Peers, elevator.Id) {
-					elevatorsMap[elevator.Id] = *elevator
-				}
-				//Her har jeg tenkt at vi må oppdatere elevatorsmapet før det sendes i kostfunksjonen igjen fordå nå har jo
-				lostElevatorsStates = make(map[string]config.Elevator) //Overskrive et tomt map på lostPeersmapet
-				if elevator.Id == peersUpdate.Peers[0] {
-					statemachines.AssignHallOrders(orderChanTx, elevatorsMap, ackChanRx)
-				}
+					if contains(peersUpdate.Peers, elevator.Id) {
+						elevatorsMap[elevator.Id] = *elevator
+					}
+					//Her har jeg tenkt at vi må oppdatere elevatorsmapet før det sendes i kostfunksjonen igjen fordå nå har jo
+					lostElevatorsStates = make(map[string]config.Elevator) //Overskrive et tomt map på lostPeersmapet
+					if elevator.Id == peersUpdate.Peers[0] {
+						statemachines.AssignHallOrders(orderChanTx, elevatorsMap, ackChanRx)
+					}
 
+				}
+			}else{
+				elevator.IsOnline = false
 			}
-
 			// if len(peersUpdate.New) != 0 {
 
 			// 	if elevator.Id == peersUpdate.Peers[0] {
