@@ -118,14 +118,20 @@ func Fsm(elevator *config.Elevator, buttons chan elevio.ButtonEvent, floors chan
 			peerTxEnable <- false
 
 			for elevio.GetFloor() == -1 {
-				elevio.SetMotorDirection(elevio.MD_Down)
+				if elevator.Dirn == elevio.MD_Down {
+					elevio.SetMotorDirection(elevio.MD_Down)
+				}
+				if elevator.Dirn == elevio.MD_Up {
+					elevio.SetMotorDirection(elevio.MD_Up)
+				}
+
 			}
 			elevator.Dirn = elevio.MD_Stop
-
 			elevio.SetMotorDirection(elevator.Dirn)
 			elevio.SetDoorOpenLamp(true)
 			elevator.Behaviour = config.EB_DoorOpen
 			doorTimer.Reset(time.Duration(3) * time.Second)
+
 		case a := <-stop:
 			if a {
 				elevio.SetMotorDirection(elevio.MD_Stop)
