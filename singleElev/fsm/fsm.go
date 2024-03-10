@@ -73,24 +73,29 @@ func Fsm(elevator *config.Elevator, buttons chan elevio.ButtonEvent, floors chan
 			}
 
 		case <-doorTimer.C:
-			elevio.SetDoorOpenLamp(false)
-			switch {
-			case elevator.Behaviour == config.EB_DoorOpen:
-				requests.Requests_chooseDirection(elevator)
-				elevio.SetMotorDirection(elevator.Dirn)
-				if elevator.Dirn == elevio.MD_Stop {
-					elevator.Behaviour = config.EB_Idle
-					motorFaultTimer.Stop()
-				} else {
-					elevator.Behaviour = config.EB_Moving
-					motorFaultTimer.Reset(time.Second * 4)
+
+			if !elevio.GetObstruction() {
+				elevio.SetDoorOpenLamp(false)
+				switch {
+				case elevator.Behaviour == config.EB_DoorOpen:
+					requests.Requests_chooseDirection(elevator)
+					elevio.SetMotorDirection(elevator.Dirn)
+					if elevator.Dirn == elevio.MD_Stop {
+						elevator.Behaviour = config.EB_Idle
+					} else {
+						elevator.Behaviour = config.EB_Moving
+					}
 				}
+
+			} else {
+				motorFaultTimer.Reset(time.Second * 4)
 			}
 
 		case obstruction := <-obstr:
 			if obstruction {
 
-				for elevator.Behaviour == config.EB_DoorOpen {
+				if elevator.Behaviour == config.EB_DoorOpen {
+					motorFaultTimer.Reset(time.Second * 7)
 					if !doorTimer.Stop() {
 						select {
 						case <-doorTimer.C:
@@ -100,11 +105,9 @@ func Fsm(elevator *config.Elevator, buttons chan elevio.ButtonEvent, floors chan
 					elevio.SetDoorOpenLamp(true)
 				}
 
-			} else {
-
-				if elevator.Behaviour == config.EB_DoorOpen {
-					doorTimer.Reset(time.Duration(3) * time.Second)
-				}
+			} else if elevator.Behaviour == config.EB_DoorOpen {
+				motorFaultTimer.Stop()
+				doorTimer.Reset(time.Duration(3) * time.Second)
 			}
 
 		case <-motorFaultTimer.C:

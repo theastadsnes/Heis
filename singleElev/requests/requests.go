@@ -100,6 +100,8 @@ func Clear_lights() {
 		elevio.SetButtonLamp(1, f, false)
 		elevio.SetButtonLamp(2, f, false)
 	}
+	elevio.SetDoorOpenLamp(false)
+
 }
 
 /**
