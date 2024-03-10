@@ -67,6 +67,7 @@ func Requests_current_floor(e *config.Elevator) bool {
  * @return Returns true if the elevator should stop at the current floor, otherwise false.
  */
 func Should_stop(e *config.Elevator) bool {
+	
 	if Requests_current_floor(e) {
 		fmt.Println("retning", e.Dirn)
 

@@ -39,18 +39,16 @@ func WatchDogLostPeers(elevator *config.Elevator, peers chan peers.PeerUpdate, e
 
 			}
 
-			if len(peersUpdate.New) != 0 {
+			// if len(peersUpdate.New) != 0 {
 
-				if elevator.Id == peersUpdate.Peers[0] {
-					statemachines.AssignHallOrders(orderChanTx, elevatorsMap)
-				}
-			}
+			// 	if elevator.Id == peersUpdate.Peers[0] {
+			// 		statemachines.AssignHallOrders(orderChanTx, elevatorsMap)
+			// 	}
+			// }
 
 		}
 	}
 }
-
-
 
 // Hjelpefunksjon for å sjekke om en liste med strenger inneholder en spesifikk streng/verdi
 func contains(slice []string, val string) bool {

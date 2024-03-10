@@ -123,7 +123,9 @@ func Fsm(elevator *config.Elevator, buttons chan elevio.ButtonEvent, floors chan
 			elevator.Dirn = elevio.MD_Stop
 
 			elevio.SetMotorDirection(elevator.Dirn)
-
+			elevio.SetDoorOpenLamp(true)
+			elevator.Behaviour = config.EB_DoorOpen
+			doorTimer.Reset(time.Duration(3) * time.Second)
 		case a := <-stop:
 			if a {
 				elevio.SetMotorDirection(elevio.MD_Stop)

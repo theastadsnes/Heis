@@ -13,6 +13,7 @@ import (
 func CabOrderFSM(elevator *config.Elevator, orderFloor int, orderButton elevio.ButtonType, doorTimer *time.Timer) {
 	if !elevio.GetStop() {
 		elevio.SetButtonLamp(orderButton, orderFloor, true)
+		
 		switch {
 		case elevator.Behaviour == config.EB_DoorOpen:
 			if orderFloor == elevator.Floor {
@@ -24,6 +25,7 @@ func CabOrderFSM(elevator *config.Elevator, orderFloor int, orderButton elevio.B
 			}
 		case elevator.Behaviour == config.EB_Moving:
 			elevator.Requests[orderFloor][orderButton] = 1
+
 		case elevator.Behaviour == config.EB_Idle:
 			if orderFloor == elevator.Floor {
 				elevio.SetDoorOpenLamp(true)
@@ -79,7 +81,7 @@ func HallOrderFSM(elevator *config.Elevator, newAssignedOrders *costfunc.Assignm
 	var orderFloor [config.NumFloors][config.NumButtons - 2]bool
 	updateHallOrders(elevator, &orderFloor, newAssignedOrders)
 	fmt.Println(orderFloor)
-	
+
 	for floor := 0; floor < config.NumFloors; floor++ {
 		for button := 0; button < config.NumButtons-2; button++ {
 			if orderFloor[floor][button] {
