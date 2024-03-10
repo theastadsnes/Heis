@@ -43,10 +43,10 @@ func main() {
 	doorTimer := time.NewTimer(time.Duration(3) * time.Second)
 	motorFaultTimer := time.NewTimer(time.Second * 4)
 
-	peerUpdateCh := make(chan peers.PeerUpdate) //Kanal som sender/mottar uppdateringer i Peer structen, om det er noen som kobles fra nettet eller noen nye tilkoblinger
-	peerTxEnable := make(chan bool)             //Kanal som kan brukes for å vise at man ikke er tilgjengelig, selvom man kanskje er på nettet
-	stateTx := make(chan *config.Elevator)      //Gjøre denne om til å sende Elevator state
-	stateRx := make(chan *config.Elevator)
+	peerUpdateCh := make(chan peers.PeerUpdate, 100) //Kanal som sender/mottar uppdateringer i Peer structen, om det er noen som kobles fra nettet eller noen nye tilkoblinger
+	peerTxEnable := make(chan bool, 100)             //Kanal som kan brukes for å vise at man ikke er tilgjengelig, selvom man kanskje er på nettet
+	stateTx := make(chan *config.Elevator, 100)      //Gjøre denne om til å sende Elevator state
+	stateRx := make(chan *config.Elevator, 100)
 	orderChanTx := make(chan *costfunc.AssignmentResults, 100)
 	orderChanRx := make(chan *costfunc.AssignmentResults, 100)
 	ackChanTx := make(chan string, 100)
