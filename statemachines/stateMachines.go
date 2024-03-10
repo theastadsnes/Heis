@@ -3,6 +3,7 @@ package statemachines
 import (
 	"Heis/config"
 	"Heis/costfunc"
+	"Heis/packetloss"
 	"Heis/singleElev/elevio"
 	"Heis/singleElev/requests"
 	"fmt"
@@ -119,12 +120,13 @@ func HallOrderFSM(elevator *config.Elevator, newAssignedOrders *costfunc.Assignm
 		}
 	}
 }
-func AssignHallOrders(orderChanTx chan *costfunc.AssignmentResults, ElevatorsMap map[string]config.Elevator) {
+func AssignHallOrders(orderChanTx chan *costfunc.AssignmentResults, ElevatorsMap map[string]config.Elevator, ackChanRx chan string) {
 
 	transStates := costfunc.TransformElevatorStates(ElevatorsMap)
 	hallRequests := costfunc.PrepareHallRequests(ElevatorsMap)
 	newOrders := costfunc.GetRequestStruct(hallRequests, transStates)
 	orderChanTx <- &newOrders
+	packetloss.WaitForAllACKs(orderChanTx, ElevatorsMap, ackChanRx, newOrders)
 
 }
 

@@ -26,7 +26,7 @@ import (
  * @param numFloors Total number of floors in the building.
  */
 
-func Fsm(elevator *config.Elevator, buttons chan elevio.ButtonEvent, floors chan int, obstr chan bool, stop chan bool, doorTimer *time.Timer, numFloors int, orderChanRx chan *costfunc.AssignmentResults, orderChanTx chan *costfunc.AssignmentResults, stateRx chan *config.Elevator, stateTx chan *config.Elevator, elevatorsMap map[string]config.Elevator, motorFaultTimer *time.Timer, peerTxEnable chan bool) {
+func Fsm(elevator *config.Elevator, buttons chan elevio.ButtonEvent, floors chan int, obstr chan bool, stop chan bool, doorTimer *time.Timer, numFloors int, orderChanRx chan *costfunc.AssignmentResults, orderChanTx chan *costfunc.AssignmentResults, stateRx chan *config.Elevator, stateTx chan *config.Elevator, elevatorsMap map[string]config.Elevator, motorFaultTimer *time.Timer, peerTxEnable chan bool, ackChanRx chan string, ackChanTx chan string) {
 	requests.Clear_lights()
 	//elevatorsMap := make(map[string]config.Elevator)
 
@@ -44,13 +44,14 @@ func Fsm(elevator *config.Elevator, buttons chan elevio.ButtonEvent, floors chan
 			} else {
 				elevator.Requests[order.Floor][order.Button] = 1
 				elevatorsMap[elevator.Id].Requests[order.Floor][order.Button] = 1
-				statemachines.AssignHallOrders(orderChanTx, elevatorsMap)
+				statemachines.AssignHallOrders(orderChanTx, elevatorsMap, ackChanRx)
 			}
 
 		case newAssignedHallOrders := <-orderChanRx:
 			fmt.Println("ASSIGNING HALL ORDER")
 			fmt.Println(newAssignedHallOrders)
-			
+			ackChanTx <- elevator.Id
+
 			statemachines.HallOrderFSM(elevator, newAssignedHallOrders, doorTimer, motorFaultTimer)
 
 		case floor := <-floors:

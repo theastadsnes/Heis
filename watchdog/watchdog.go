@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-func WatchDogLostPeers(elevator *config.Elevator, peers chan peers.PeerUpdate, elevatorsMap map[string]config.Elevator, orderChanTx chan *costfunc.AssignmentResults) {
+func WatchDogLostPeers(elevator *config.Elevator, peers chan peers.PeerUpdate, elevatorsMap map[string]config.Elevator, orderChanTx chan *costfunc.AssignmentResults, ackChanRx chan string) {
 
 	var lostElevatorsStates map[string]config.Elevator = make(map[string]config.Elevator)
 
@@ -34,7 +34,7 @@ func WatchDogLostPeers(elevator *config.Elevator, peers chan peers.PeerUpdate, e
 				//Her har jeg tenkt at vi må oppdatere elevatorsmapet før det sendes i kostfunksjonen igjen fordå nå har jo
 				lostElevatorsStates = make(map[string]config.Elevator) //Overskrive et tomt map på lostPeersmapet
 				if elevator.Id == peersUpdate.Peers[0] {
-					statemachines.AssignHallOrders(orderChanTx, elevatorsMap)
+					statemachines.AssignHallOrders(orderChanTx, elevatorsMap, ackChanRx)
 				}
 
 			}
