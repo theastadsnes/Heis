@@ -5,6 +5,7 @@ import (
 	"Heis/costfunc"
 	"Heis/singleElev/elevio"
 	"Heis/singleElev/requests"
+	"fmt"
 	"time"
 	//"fmt"
 )
@@ -49,7 +50,7 @@ func CabOrderFSM(elevator *config.Elevator, orderFloor int, orderButton elevio.B
 
 func updateHallOrders(elevator *config.Elevator, orderFloor *[config.NumFloors][config.NumButtons - 2]bool, newAssignedOrders *costfunc.AssignmentResults) {
 
-	for _, assignments := range (*newAssignedOrders).Assignments {
+	for _, assignments := range newAssignedOrders.Assignments {
 		if assignments.ID == elevator.Id {
 			for floor := 0; floor < config.NumFloors; floor++ {
 				if assignments.UpRequests[floor] {
@@ -77,7 +78,8 @@ func HallOrderFSM(elevator *config.Elevator, newAssignedOrders *costfunc.Assignm
 
 	var orderFloor [config.NumFloors][config.NumButtons - 2]bool
 	updateHallOrders(elevator, &orderFloor, newAssignedOrders)
-
+	fmt.Println(orderFloor)
+	
 	for floor := 0; floor < config.NumFloors; floor++ {
 		for button := 0; button < config.NumButtons-2; button++ {
 			if orderFloor[floor][button] {

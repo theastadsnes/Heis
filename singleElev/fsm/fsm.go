@@ -49,6 +49,7 @@ func Fsm(elevator *config.Elevator, buttons chan elevio.ButtonEvent, floors chan
 
 		case newAssignedHallOrders := <-orderChanRx:
 			fmt.Println("ASSIGNING HALL ORDER")
+			fmt.Println(newAssignedHallOrders)
 			statemachines.HallOrderFSM(elevator, newAssignedHallOrders, doorTimer, motorFaultTimer)
 
 		case floor := <-floors:
@@ -113,8 +114,15 @@ func Fsm(elevator *config.Elevator, buttons chan elevio.ButtonEvent, floors chan
 			}
 
 		case <-motorFaultTimer.C:
-			fmt.Println("MOTORFAULT")
+			fmt.Println("MOTORFAULT", elevator.Floor)
 			peerTxEnable <- false
+
+			for elevio.GetFloor() == -1 {
+				elevio.SetMotorDirection(elevio.MD_Down)
+			}
+			elevator.Dirn = elevio.MD_Stop
+
+			elevio.SetMotorDirection(elevator.Dirn)
 
 		case a := <-stop:
 			if a {

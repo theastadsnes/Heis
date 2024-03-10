@@ -8,6 +8,7 @@ package requests
 import (
 	"Heis/config"
 	"Heis/singleElev/elevio"
+	"fmt"
 	"time"
 )
 
@@ -67,6 +68,8 @@ func Requests_current_floor(e *config.Elevator) bool {
  */
 func Should_stop(e *config.Elevator) bool {
 	if Requests_current_floor(e) {
+		fmt.Println("retning", e.Dirn)
+
 		switch {
 		case e.Dirn == elevio.MD_Down:
 			if e.Requests[e.Floor][elevio.BT_HallUp] == 1 && Requests_below(e) {

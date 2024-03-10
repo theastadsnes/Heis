@@ -50,19 +50,7 @@ func WatchDogLostPeers(elevator *config.Elevator, peers chan peers.PeerUpdate, e
 	}
 }
 
-func WatchdogNewPeers(peers chan peers.PeerUpdate, elevatorsMap map[string]config.Elevator, orderChanTx chan *costfunc.AssignmentResults) {
-	//på en eller annen måte gi beskjed om at hvis de mistede cabordersene er utført eller ikke .
 
-	for {
-		select {
-		case peersUpdate := <-peers:
-			if len(peersUpdate.New) != 0 {
-
-				statemachines.AssignHallOrders(orderChanTx, elevatorsMap)
-			}
-		}
-	}
-}
 
 // Hjelpefunksjon for å sjekke om en liste med strenger inneholder en spesifikk streng/verdi
 func contains(slice []string, val string) bool {
