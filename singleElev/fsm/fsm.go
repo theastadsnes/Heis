@@ -88,12 +88,21 @@ func Fsm(elevator *config.Elevator, buttons chan elevio.ButtonEvent, floors chan
 			}
 
 		case obstruction := <-obstr:
-			if elevator.Behaviour == config.EB_DoorOpen {
-				if obstruction {
+			if obstruction {
+
+				for elevator.Behaviour == config.EB_DoorOpen {
 					if !doorTimer.Stop() {
-						<-doorTimer.C
+						select {
+						case <-doorTimer.C:
+						default:
+						}
 					}
-				} else {
+					elevio.SetDoorOpenLamp(true)
+				}
+
+			} else {
+
+				if elevator.Behaviour == config.EB_DoorOpen {
 					doorTimer.Reset(time.Duration(3) * time.Second)
 				}
 			}
