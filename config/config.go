@@ -10,7 +10,7 @@ import (
 
 const (
 	NumFloors  = 4
-	NumButtons = 4
+	NumButtons = 3
 )
 
 type ElevatorBehaviour int
@@ -31,9 +31,9 @@ type Elevator struct {
 }
 
 func InitElevState(id string) Elevator {
-	requests := make([][]bool, 4)
+	requests := make([][]bool, NumFloors)
 	for floor := range requests {
-		requests[floor] = make([]bool, 4)
+		requests[floor] = make([]bool, NumButtons)
 	}
 
 	for elevio.GetFloor() == -1 {

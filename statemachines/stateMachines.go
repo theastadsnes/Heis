@@ -51,7 +51,7 @@ func CabOrderFSM(elevator *config.Elevator, orderFloor int, orderButton elevio.B
 
 }
 
-func updateHallOrders(elevator *config.Elevator, orderFloor *[config.NumFloors][config.NumButtons - 2]bool, newAssignedOrders *costfunc.AssignmentResults) {
+func updateHallOrders(elevator *config.Elevator, orderFloor *[config.NumFloors][config.NumButtons - 1]bool, newAssignedOrders *costfunc.AssignmentResults) {
 
 	for _, assignments := range newAssignedOrders.Assignments {
 		if assignments.ID == elevator.Id {
@@ -79,12 +79,12 @@ func updateHallOrders(elevator *config.Elevator, orderFloor *[config.NumFloors][
 
 func HallOrderFSM(elevator *config.Elevator, newAssignedOrders *costfunc.AssignmentResults, doorTimer *time.Timer, motorFaultTimer *time.Timer) {
 
-	var orderFloor [config.NumFloors][config.NumButtons - 2]bool
+	var orderFloor [config.NumFloors][config.NumButtons - 1]bool
 	updateHallOrders(elevator, &orderFloor, newAssignedOrders)
 	fmt.Println(orderFloor)
 
 	for floor := 0; floor < config.NumFloors; floor++ {
-		for button := 0; button < config.NumButtons-2; button++ {
+		for button := 0; button < config.NumButtons-1; button++ {
 			if orderFloor[floor][button] {
 				switch {
 				case elevator.Behaviour == config.EB_DoorOpen:
@@ -140,7 +140,7 @@ func AssignHallOrders(orderChanTx chan *costfunc.AssignmentResults, ElevatorsMap
 
 func UpdateLights(elevator *config.Elevator, elevatorsMap map[string]config.Elevator) {
 
-	var lights [config.NumFloors][config.NumButtons - 2]bool
+	var lights [config.NumFloors][config.NumButtons - 1]bool
 
 	for _, id := range elevatorsMap {
 		for floor := range id.Requests {
@@ -153,7 +153,7 @@ func UpdateLights(elevator *config.Elevator, elevatorsMap map[string]config.Elev
 
 	}
 	for floor := 0; floor < config.NumFloors; floor++ {
-		for button := 0; button < config.NumButtons-2; button++ {
+		for button := 0; button < config.NumButtons-1; button++ {
 			elevio.SetButtonLamp(elevio.ButtonType(button), floor, lights[floor][button])
 		}
 	}
