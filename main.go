@@ -6,16 +6,16 @@
 package main
 
 import (
+	"Heis/Assigner"
+	"Heis/Driver/elevio"
+	"Heis/Executer"
+	"Heis/Orderhandler"
 	"Heis/config"
-	"Heis/costfunc"
 	"Heis/network/bcast"
 	"Heis/network/peers"
+	"Heis/network/statehandler"
 	"Heis/watchdog"
 	"fmt"
-
-	"Heis/network/statehandler"
-	"Heis/singleElev/elevio"
-	"Heis/singleElev/fsm"
 	"time"
 )
 
@@ -47,8 +47,8 @@ func main() {
 	peerTxEnable := make(chan bool, 100)             //Kanal som kan brukes for å vise at man ikke er tilgjengelig, selvom man kanskje er på nettet
 	stateTx := make(chan *config.Elevator, 100)      //Gjøre denne om til å sende Elevator state
 	stateRx := make(chan *config.Elevator, 100)
-	orderChanTx := make(chan *costfunc.AssignmentResults, 100)
-	orderChanRx := make(chan *costfunc.AssignmentResults, 100)
+	orderChanTx := make(chan *Assigner.AssignmentResults, 100)
+	orderChanRx := make(chan *Assigner.AssignmentResults, 100)
 	ackChanTx := make(chan string, 100)
 	ackChanRx := make(chan string, 100)
 
@@ -77,9 +77,9 @@ func main() {
 	go statehandler.SendElevatorStates(stateTx, &elevator)
 	go watchdog.WatchDogLostPeers(&elevator, peerUpdateCh, elevatorsMap, orderChanTx, ackChanRx)
 	//go watchdog.WatchdogNewPeers(peerUpdateCh, elevatorsMap, orderChanTx)
-	go fsm.Fsm(&elevator, drv_buttons, drv_floors, drv_obstr, drv_stop, doorTimer, numFloors, orderChanRx, orderChanTx, stateRx, stateTx, elevatorsMap, motorFaultTimer, peerTxEnable, ackChanRx, ackChanTx)
+	go Executer.Fsm(&elevator, drv_buttons, drv_floors, drv_obstr, drv_stop, doorTimer, numFloors, orderChanRx, orderChanTx, stateRx, stateTx, elevatorsMap, motorFaultTimer, peerTxEnable, ackChanRx, ackChanTx)
 
-	watchdog.ReadFromBackup(drv_buttons)
+	Orderhandler.ReadFromBackup(drv_buttons)
 
 	select {}
 

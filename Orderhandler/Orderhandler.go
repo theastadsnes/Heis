@@ -3,12 +3,15 @@
  * @brief Contains functions related to elevator requests handling.
  */
 
-package requests
+package Orderhandler
 
 import (
+	"Heis/Driver/elevio"
 	"Heis/config"
-	"Heis/singleElev/elevio"
 	"fmt"
+	"os"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -192,4 +195,51 @@ func ClearAllRequests(numFloors int, e *config.Elevator) {
 
 func HasRequests(elevator *config.Elevator) bool {
 	return RequestsAbove(elevator) || RequestsBelow(elevator)
+
+}
+
+func WriteToBackup(elevator *config.Elevator) {
+	filename := "cabOrder.txt"
+	f, err := os.Create(filename)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	caborders := make([]bool, config.NumFloors)
+
+	for floors, _ := range elevator.Requests {
+		caborders[floors] = elevator.Requests[floors][2]
+	}
+
+	cabordersString := strings.Trim(fmt.Sprint(caborders), "[]")
+	_, err = f.WriteString(cabordersString)
+
+	defer f.Close()
+}
+
+func ReadFromBackup(buttons chan elevio.ButtonEvent) {
+	filename := "cabOrder.txt"
+	f, err := os.ReadFile(filename)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	caborders := make([]bool, 0)
+
+	if err == nil {
+		cabOrders := strings.Split(string(f), " ")
+		for _, order := range cabOrders {
+			result, _ := strconv.ParseBool(order)
+			caborders = append(caborders, result)
+		}
+	}
+	time.Sleep(20 * time.Millisecond)
+	for floor, order := range caborders {
+		if order {
+			backupOrder := elevio.ButtonEvent{Floor: floor, Button: elevio.BT_Cab}
+			buttons <- backupOrder
+			time.Sleep(20 * time.Millisecond)
+		}
+	}
 }

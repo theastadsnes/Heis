@@ -1,19 +1,13 @@
 package watchdog
 
 import (
+	"Heis/Assigner"
 	"Heis/config"
-	"Heis/costfunc"
 	"Heis/network/peers"
-	"Heis/singleElev/elevio"
-	"Heis/statemachines"
 	"fmt"
-	"os"
-	"strconv"
-	"strings"
-	"time"
 )
 
-func WatchDogLostPeers(elevator *config.Elevator, peers chan peers.PeerUpdate, elevatorsMap map[string]config.Elevator, orderChanTx chan *costfunc.AssignmentResults, ackChanRx chan string) {
+func WatchDogLostPeers(elevator *config.Elevator, peers chan peers.PeerUpdate, elevatorsMap map[string]config.Elevator, orderChanTx chan *Assigner.AssignmentResults, ackChanRx chan string) {
 
 	var lostElevatorsStates map[string]config.Elevator = make(map[string]config.Elevator)
 
@@ -37,7 +31,7 @@ func WatchDogLostPeers(elevator *config.Elevator, peers chan peers.PeerUpdate, e
 					//Her har jeg tenkt at vi må oppdatere elevatorsmapet før det sendes i kostfunksjonen igjen fordå nå har jo
 					lostElevatorsStates = make(map[string]config.Elevator) //Overskrive et tomt map på lostPeersmapet
 					if elevator.Id == peersUpdate.Peers[0] {
-						statemachines.AssignHallOrders(orderChanTx, elevatorsMap, ackChanRx)
+						Assigner.AssignHallOrders(orderChanTx, elevatorsMap, ackChanRx)
 					}
 
 				}
@@ -96,51 +90,6 @@ func transferOrders(elevator *config.Elevator, peersUpdate peers.PeerUpdate, los
 				//hvordan kan man sjekke om man selv er den heisen som har mistet internettforbindelsen
 
 			}
-		}
-	}
-}
-
-func WriteToBackup(elevator *config.Elevator) {
-	filename := "cabOrder.txt"
-	f, err := os.Create(filename)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	caborders := make([]bool, config.NumFloors)
-
-	for floors, _ := range elevator.Requests {
-		caborders[floors] = elevator.Requests[floors][2]
-	}
-
-	cabordersString := strings.Trim(fmt.Sprint(caborders), "[]")
-	_, err = f.WriteString(cabordersString)
-
-	defer f.Close()
-}
-
-func ReadFromBackup(buttons chan elevio.ButtonEvent) {
-	filename := "cabOrder.txt"
-	f, err := os.ReadFile(filename)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	caborders := make([]bool, 0)
-	if err == nil {
-		cabOrders := strings.Split(string(f), " ")
-		for _, order := range cabOrders {
-			result, _ := strconv.ParseBool(order)
-			caborders = append(caborders, result)
-		}
-	}
-	time.Sleep(20 * time.Millisecond)
-	for floor, order := range caborders {
-		if order {
-			backupOrder := elevio.ButtonEvent{Floor: floor, Button: elevio.BT_Cab}
-			buttons <- backupOrder
-			time.Sleep(20 * time.Millisecond)
 		}
 	}
 }

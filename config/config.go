@@ -1,8 +1,8 @@
 package config
 
 import (
+	"Heis/Driver/elevio"
 	"Heis/network/localip"
-	"Heis/singleElev/elevio"
 	"flag"
 	"fmt"
 	"os"
