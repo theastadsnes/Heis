@@ -74,7 +74,7 @@ func TransformElevatorStates(elevators map[string]config.Elevator) map[string]HR
 	for id, elev := range elevators {
 		cabRequests := make([]bool, len(elev.Requests[0]))
 		for floor := 0; floor < len(elev.Requests[0]); floor++ {
-			cabRequests[floor] = elev.Requests[floor][elevio.BT_Cab] > 0
+			cabRequests[floor] = elev.Requests[floor][elevio.BT_Cab] 
 		}
 
 		states[id] = HRAElevState{
@@ -94,10 +94,10 @@ func PrepareHallRequests(elevators map[string]config.Elevator) [][2]bool {
 
 	for _, elev := range elevators {
 		for floor := 0; floor < numFloors; floor++ {
-			if elev.Requests[floor][0] > 0 {
+			if elev.Requests[floor][0] {
 				hallRequests[floor][0] = true
 			}
-			if elev.Requests[floor][1] > 0 {
+			if elev.Requests[floor][1] {
 				hallRequests[floor][1] = true
 			}
 		}

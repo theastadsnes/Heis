@@ -23,7 +23,7 @@ var Buttons int = 4 // Number of elevator buttons (e.g., Up, Down, Cab)
 func RequestsAbove(e *config.Elevator) bool {
 	for f := e.Floor + 1; f < Floors; f++ {
 		for b := 0; b < Buttons; b++ {
-			if e.Requests[f][b] == 1 {
+			if e.Requests[f][b] {
 				return true
 			}
 		}
@@ -39,7 +39,7 @@ func RequestsAbove(e *config.Elevator) bool {
 func RequestsBelow(e *config.Elevator) bool {
 	for f := e.Floor - 1; f >= 0; f-- {
 		for b := 0; b < Buttons; b++ {
-			if e.Requests[f][b] == 1 {
+			if e.Requests[f][b] {
 				return true
 			}
 		}
@@ -54,7 +54,7 @@ func RequestsBelow(e *config.Elevator) bool {
  */
 func RequestsCurrentFloor(e *config.Elevator) bool {
 	for b := 0; b < Buttons; b++ {
-		if e.Requests[e.Floor][b] == 1 {
+		if e.Requests[e.Floor][b]{
 			return true
 		}
 	}
@@ -73,16 +73,16 @@ func ShouldStop(e *config.Elevator) bool {
 
 		switch {
 		case e.Dirn == elevio.MD_Down:
-			if e.Requests[e.Floor][elevio.BT_HallUp] == 1 && RequestsBelow(e) {
-				if e.Requests[e.Floor][elevio.BT_HallDown] == 1 {
+			if e.Requests[e.Floor][elevio.BT_HallUp] && RequestsBelow(e) {
+				if e.Requests[e.Floor][elevio.BT_HallDown] {
 					return true
 				} else {
 					return false
 				}
 			}
 		case e.Dirn == elevio.MD_Up:
-			if e.Requests[e.Floor][elevio.BT_HallDown] == 1 && RequestsAbove(e) {
-				if e.Requests[e.Floor][elevio.BT_HallUp] == 1 {
+			if e.Requests[e.Floor][elevio.BT_HallDown] && RequestsAbove(e) {
+				if e.Requests[e.Floor][elevio.BT_HallUp] {
 					return true
 				} else {
 					return false
@@ -113,30 +113,30 @@ func ClearLights() {
  * @param e A pointer to the current state of the elevator.
  */
 func ClearRequestAtFloor(e *config.Elevator, doorTimer *time.Timer) {
-	e.Requests[e.Floor][int(elevio.BT_Cab)] = 0
+	e.Requests[e.Floor][int(elevio.BT_Cab)] = false
 	elevio.SetButtonLamp(elevio.BT_Cab, e.Floor, false)
 
 	switch {
 	case e.Dirn == elevio.MD_Up:
-		e.Requests[e.Floor][int(elevio.BT_HallUp)] = 0
+		e.Requests[e.Floor][int(elevio.BT_HallUp)] = false
 		elevio.SetButtonLamp(elevio.BT_HallUp, e.Floor, false)
 		if !RequestsAbove(e) {
-			e.Requests[e.Floor][int(elevio.BT_HallDown)] = 0
+			e.Requests[e.Floor][int(elevio.BT_HallDown)] = false
 			elevio.SetButtonLamp(elevio.BT_HallDown, e.Floor, false)
 		}
 
 	case e.Dirn == elevio.MD_Down:
 
-		e.Requests[e.Floor][int(elevio.BT_HallDown)] = 0
+		e.Requests[e.Floor][int(elevio.BT_HallDown)] = false
 		elevio.SetButtonLamp(elevio.BT_HallDown, e.Floor, false)
 		if !RequestsBelow(e) {
-			e.Requests[e.Floor][int(elevio.BT_HallUp)] = 0
+			e.Requests[e.Floor][int(elevio.BT_HallUp)] = false
 			elevio.SetButtonLamp(elevio.BT_HallUp, e.Floor, false)
 		}
 
 	case e.Dirn == elevio.MD_Stop:
-		e.Requests[e.Floor][int(elevio.BT_HallDown)] = 0
-		e.Requests[e.Floor][int(elevio.BT_HallUp)] = 0
+		e.Requests[e.Floor][int(elevio.BT_HallDown)] = false
+		e.Requests[e.Floor][int(elevio.BT_HallUp)] = false
 		elevio.SetButtonLamp(elevio.BT_HallUp, e.Floor, false)
 		elevio.SetButtonLamp(elevio.BT_HallDown, e.Floor, false)
 	}
@@ -184,7 +184,7 @@ func RequestsChooseDirection(e *config.Elevator) {
 func ClearAllRequests(numFloors int, e *config.Elevator) {
 	for floor := 0; floor < numFloors; floor++ {
 		for button := elevio.ButtonType(0); button < 3; button++ {
-			e.Requests[floor][button] = 0
+			e.Requests[floor][button] = false
 			elevio.SetButtonLamp(button, floor, false)
 		}
 	}

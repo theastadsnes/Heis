@@ -78,16 +78,16 @@ func transferOrders(elevator *config.Elevator, peersUpdate peers.PeerUpdate, los
 		for floor := 0; floor < config.NumFloors; floor++ {
 			for button := 0; button < 2; button++ {
 				if elevator.Id == peersUpdate.Peers[0] { //Velger den første peeren som er online til å ta over ordrene
-					if lostElev.Requests[floor][button] == 1 {
-						elevator.Requests[floor][button] = 1
+					if lostElev.Requests[floor][button] {
+						elevator.Requests[floor][button] = true
 
 					}
 
 				}
 				for _, id := range peersUpdate.Lost {
 					if elevator.Id == id {
-						if lostElev.Requests[floor][button] == 1 {
-							elevator.Requests[floor][button] = 0
+						if lostElev.Requests[floor][button] {
+							elevator.Requests[floor][button] = false
 
 						}
 					}
@@ -108,7 +108,7 @@ func WriteToBackup(elevator *config.Elevator) {
 		return
 	}
 
-	caborders := make([]int, config.NumFloors)
+	caborders := make([]bool, config.NumFloors)
 
 	for floors, _ := range elevator.Requests {
 		caborders[floors] = elevator.Requests[floors][2]
@@ -116,6 +116,7 @@ func WriteToBackup(elevator *config.Elevator) {
 
 	cabordersString := strings.Trim(fmt.Sprint(caborders), "[]")
 	_, err = f.WriteString(cabordersString)
+
 	defer f.Close()
 }
 

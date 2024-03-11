@@ -25,15 +25,15 @@ type Elevator struct {
 	Id        string
 	Floor     int
 	Dirn      elevio.MotorDirection
-	Requests  [][]int
+	Requests  [][]bool
 	Behaviour ElevatorBehaviour
 	IsOnline  bool
 }
 
 func InitElevState(id string) Elevator {
-	requests := make([][]int, 4)
+	requests := make([][]bool, 4)
 	for floor := range requests {
-		requests[floor] = make([]int, 4)
+		requests[floor] = make([]bool, 4)
 	}
 
 	for elevio.GetFloor() == -1 {
