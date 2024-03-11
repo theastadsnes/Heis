@@ -56,7 +56,6 @@ func Fsm(elevator *config.Elevator, buttons chan elevio.ButtonEvent, floors chan
 
 			if Orderhandler.ShouldStop(elevator) {
 				elevio.SetMotorDirection(elevio.MD_Stop)
-				elevator.Dirn = elevio.MD_Stop
 				elevio.SetDoorOpenLamp(true)
 				Orderhandler.ClearRequestAtFloor(elevator, doorTimer)
 				elevator.Behaviour = config.EB_DoorOpen
