@@ -1,13 +1,8 @@
-/**
- * @file requests.go
- * @brief Contains functions related to elevator requests handling.
- */
-
-package Orderhandler
+package orderhandler
 
 import (
-	"Heis/Driver/elevio"
 	"Heis/config"
+	"Heis/driver/elevio"
 	"fmt"
 	"os"
 	"strconv"
@@ -15,14 +10,6 @@ import (
 	"time"
 )
 
-// var Floors int = 4  // Number of floors in the building
-// var Buttons int = 4 // Number of elevator buttons (e.g., Up, Down, Cab)
-
-/**
- * @brief Checks if there are any requests above the current floor.
- * @param e The current state of the elevator.
- * @return Returns true if there are requests above the current floor, otherwise false.
- */
 func RequestsAbove(e *config.Elevator) bool {
 	for f := e.Floor + 1; f < config.NumFloors; f++ {
 		for b := 0; b < config.NumButtons; b++ {
@@ -34,11 +21,6 @@ func RequestsAbove(e *config.Elevator) bool {
 	return false
 }
 
-/**
- * @brief Checks if there are any requests below the current floor.
- * @param e The current state of the elevator.
- * @return Returns true if there are requests below the current floor, otherwise false.
- */
 func RequestsBelow(e *config.Elevator) bool {
 	for f := e.Floor - 1; f >= 0; f-- {
 		for b := 0; b < config.NumButtons; b++ {
@@ -50,11 +32,6 @@ func RequestsBelow(e *config.Elevator) bool {
 	return false
 }
 
-/**
- * @brief Checks if there are any requests on the current floor.
- * @param e The current state of the elevator.
- * @return Returns true if there are requests on the current floor, otherwise false.
- */
 func RequestsCurrentFloor(e *config.Elevator) bool {
 	for b := 0; b < config.NumButtons; b++ {
 		if e.Requests[e.Floor][b] {
@@ -64,15 +41,9 @@ func RequestsCurrentFloor(e *config.Elevator) bool {
 	return false
 }
 
-/**
- * @brief Determines if the elevator should stop at the current floor based on requests.
- * @param e The current state of the elevator.
- * @return Returns true if the elevator should stop at the current floor, otherwise false.
- */
 func ShouldStop(e *config.Elevator) bool {
 
 	if RequestsCurrentFloor(e) {
-		fmt.Println("retning", e.Dirn)
 
 		switch {
 		case e.Dirn == elevio.MD_Down:
@@ -91,16 +62,12 @@ func ShouldStop(e *config.Elevator) bool {
 					return false
 				}
 			}
-
 		}
 		return true
 	}
 	return false
 }
 
-/**
- * @brief Clears all button lights in the elevator.
- */
 func ClearLights() {
 	for f := 0; f < config.NumFloors; f++ {
 		elevio.SetButtonLamp(0, f, false)
@@ -111,10 +78,6 @@ func ClearLights() {
 
 }
 
-/**
- * @brief Clears requests and button lights at the current floor.
- * @param e A pointer to the current state of the elevator.
- */
 func ClearRequestAtFloor(e *config.Elevator, doorTimer *time.Timer) {
 	e.Requests[e.Floor][int(elevio.BT_Cab)] = false
 	elevio.SetButtonLamp(elevio.BT_Cab, e.Floor, false)
@@ -146,10 +109,6 @@ func ClearRequestAtFloor(e *config.Elevator, doorTimer *time.Timer) {
 
 }
 
-/**
- * @brief Chooses the elevator direction based on current requests.
- * @param e A pointer to the current state of the elevator.
- */
 func RequestsChooseDirection(e *config.Elevator) {
 
 	switch e.Dirn {
@@ -180,10 +139,6 @@ func RequestsChooseDirection(e *config.Elevator) {
 	}
 }
 
-/**
- * @brief Clears requests and button lights at all floors.
- * @param numFloors Number of floors
- */
 func ClearAllRequests(numFloors int, e *config.Elevator) {
 	for floor := 0; floor < config.NumFloors; floor++ {
 		for button := elevio.ButtonType(0); button < config.NumButtons; button++ {
@@ -202,18 +157,20 @@ func WriteToBackup(elevator *config.Elevator) {
 	filename := "Orderhandler/cabOrder.txt"
 	f, err := os.Create(filename)
 	if err != nil {
-		fmt.Println(err)
 		return
 	}
 
 	caborders := make([]bool, config.NumFloors)
 
-	for floors, _ := range elevator.Requests {
+	for floors := range elevator.Requests {
 		caborders[floors] = elevator.Requests[floors][2]
 	}
 
 	cabordersString := strings.Trim(fmt.Sprint(caborders), "[]")
 	_, err = f.WriteString(cabordersString)
+	if err != nil {
+		return
+	}
 
 	defer f.Close()
 }
@@ -222,24 +179,43 @@ func ReadFromBackup(buttons chan elevio.ButtonEvent) {
 	filename := "Orderhandler/cabOrder.txt"
 	f, err := os.ReadFile(filename)
 	if err != nil {
-		fmt.Println(err)
 		return
 	}
 	caborders := make([]bool, 0)
 
-	if err == nil {
-		cabOrders := strings.Split(string(f), " ")
-		for _, order := range cabOrders {
-			result, _ := strconv.ParseBool(order)
-			caborders = append(caborders, result)
-		}
+	cabOrders := strings.Split(string(f), " ")
+	for _, order := range cabOrders {
+		result, _ := strconv.ParseBool(order)
+		caborders = append(caborders, result)
 	}
+
 	time.Sleep(20 * time.Millisecond)
 	for floor, order := range caborders {
 		if order {
 			backupOrder := elevio.ButtonEvent{Floor: floor, Button: elevio.BT_Cab}
 			buttons <- backupOrder
 			time.Sleep(20 * time.Millisecond)
+		}
+	}
+}
+
+func UpdateLights(elevator *config.Elevator, elevatorsMap map[string]config.Elevator) {
+
+	var lights [config.NumFloors][config.NumButtons - 1]bool
+
+	for _, id := range elevatorsMap {
+		for floor := range id.Requests {
+			for button := 0; button < 2; button++ {
+				if id.Requests[floor][button] {
+					lights[floor][button] = true
+				}
+			}
+		}
+
+	}
+	for floor := 0; floor < config.NumFloors; floor++ {
+		for button := 0; button < config.NumButtons-1; button++ {
+			elevio.SetButtonLamp(elevio.ButtonType(button), floor, lights[floor][button])
 		}
 	}
 }

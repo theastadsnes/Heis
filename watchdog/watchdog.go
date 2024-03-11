@@ -1,14 +1,14 @@
 package watchdog
 
 import (
-	"Heis/Assigner"
-	"Heis/config"
+	"Heis/assigner"
 	"Heis/network/peers"
+	"Heis/config"
 	"fmt"
 	"time"
 )
 
-func WatchDogLostPeers(elevator *config.Elevator, peers chan peers.PeerUpdate, elevatorsMap map[string]config.Elevator, orderChanTx chan *Assigner.AssignmentResults, ackChanRx chan string) {
+func Watchdog(elevator *config.Elevator, peers chan peers.PeerUpdate, elevatorsMap map[string]config.Elevator, orderChanTx chan *config.AssignmentResults, ackChanRx chan string) {
 
 	var lostElevatorsStates map[string]config.Elevator = make(map[string]config.Elevator)
 
@@ -29,28 +29,19 @@ func WatchDogLostPeers(elevator *config.Elevator, peers chan peers.PeerUpdate, e
 					if contains(peersUpdate.Peers, elevator.Id) {
 						elevatorsMap[elevator.Id] = *elevator
 					}
-					//Her har jeg tenkt at vi må oppdatere elevatorsmapet før det sendes i kostfunksjonen igjen fordå nå har jo
-					lostElevatorsStates = make(map[string]config.Elevator) //Overskrive et tomt map på lostPeersmapet
+					lostElevatorsStates = make(map[string]config.Elevator)
 					if elevator.Id == peersUpdate.Peers[0] {
-						Assigner.AssignHallOrders(orderChanTx, elevatorsMap, ackChanRx)
+						assigner.AssignHallOrders(orderChanTx, elevatorsMap, ackChanRx)
 					}
-
 				}
 			} else {
 				elevator.IsOnline = false
 			}
-			// if len(peersUpdate.New) != 0 {
-
-			// 	if elevator.Id == peersUpdate.Peers[0] {
-			// 		statemachines.AssignHallOrders(orderChanTx, elevatorsMap)
-			// 	}
-			// }
 
 		}
 	}
 }
 
-// Hjelpefunksjon for å sjekke om en liste med strenger inneholder en spesifikk streng/verdi
 func contains(slice []string, val string) bool {
 	for _, item := range slice {
 		if item == val {
@@ -64,7 +55,6 @@ func addToLostElevatorsMap(peersUpdate peers.PeerUpdate, elevatorsMap, lostEleva
 	for _, lostPeerID := range peersUpdate.Lost {
 		lostElevatorsStates[lostPeerID] = elevatorsMap[lostPeerID]
 		delete(elevatorsMap, lostPeerID)
-		fmt.Printf("Heis med ID %s er tapt. Tilstanden er lagret og heisen er fjernet fra elevatorsMap.\n", lostPeerID)
 	}
 }
 
@@ -72,7 +62,7 @@ func transferOrders(elevator *config.Elevator, peersUpdate peers.PeerUpdate, los
 	for _, lostElev := range lostElevatorsStates {
 		for floor := 0; floor < config.NumFloors; floor++ {
 			for button := 0; button < 2; button++ {
-				if elevator.Id == peersUpdate.Peers[0] { //Velger den første peeren som er online til å ta over ordrene
+				if elevator.Id == peersUpdate.Peers[0] {
 					if lostElev.Requests[floor][button] {
 						elevator.Requests[floor][button] = true
 
@@ -87,8 +77,6 @@ func transferOrders(elevator *config.Elevator, peersUpdate peers.PeerUpdate, los
 						}
 					}
 				}
-
-				//hvordan kan man sjekke om man selv er den heisen som har mistet internettforbindelsen
 
 			}
 		}
