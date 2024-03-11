@@ -72,9 +72,9 @@ func Costfunc(hallRequests [][2]bool, states map[string]HRAElevState) (map[strin
 func getExecutableName() string {
 	switch runtime.GOOS {
 	case "linux":
-		return "hall_request_assigner"
+		return "Executables/hall_request_assigner"
 	case "windows":
-		return "hall_request_assigner.exe"
+		return "Executables/hall_request_assigner.exe"
 	default:
 		panic("OS not supported")
 	}

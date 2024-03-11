@@ -199,7 +199,7 @@ func HasRequests(elevator *config.Elevator) bool {
 }
 
 func WriteToBackup(elevator *config.Elevator) {
-	filename := "cabOrder.txt"
+	filename := "Orderhandler/cabOrder.txt"
 	f, err := os.Create(filename)
 	if err != nil {
 		fmt.Println(err)
@@ -219,7 +219,7 @@ func WriteToBackup(elevator *config.Elevator) {
 }
 
 func ReadFromBackup(buttons chan elevio.ButtonEvent) {
-	filename := "cabOrder.txt"
+	filename := "Orderhandler/cabOrder.txt"
 	f, err := os.ReadFile(filename)
 	if err != nil {
 		fmt.Println(err)

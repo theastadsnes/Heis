@@ -5,6 +5,7 @@ import (
 	"Heis/config"
 	"Heis/network/peers"
 	"fmt"
+	"time"
 )
 
 func WatchDogLostPeers(elevator *config.Elevator, peers chan peers.PeerUpdate, elevatorsMap map[string]config.Elevator, orderChanTx chan *Assigner.AssignmentResults, ackChanRx chan string) {
@@ -91,5 +92,12 @@ func transferOrders(elevator *config.Elevator, peersUpdate peers.PeerUpdate, los
 
 			}
 		}
+	}
+}
+
+func SendElevatorStates(stateTx chan *config.Elevator, elevator *config.Elevator) {
+	for {
+		stateTx <- elevator
+		time.Sleep(200 * time.Millisecond)
 	}
 }

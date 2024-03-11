@@ -13,7 +13,6 @@ import (
 	"Heis/config"
 	"Heis/network/bcast"
 	"Heis/network/peers"
-	"Heis/network/statehandler"
 	"Heis/watchdog"
 	"fmt"
 	"time"
@@ -74,7 +73,7 @@ func main() {
 	go bcast.Receiver(16590, ackChanRx)
 
 	//go statehandler.HandlePeerUpdates(peerUpdateCh, stateRx)
-	go statehandler.SendElevatorStates(stateTx, &elevator)
+	go watchdog.SendElevatorStates(stateTx, &elevator)
 	go watchdog.WatchDogLostPeers(&elevator, peerUpdateCh, elevatorsMap, orderChanTx, ackChanRx)
 	//go watchdog.WatchdogNewPeers(peerUpdateCh, elevatorsMap, orderChanTx)
 	go Executer.Fsm(&elevator, drv_buttons, drv_floors, drv_obstr, drv_stop, doorTimer, numFloors, orderChanRx, orderChanTx, stateRx, stateTx, elevatorsMap, motorFaultTimer, peerTxEnable, ackChanRx, ackChanTx)
