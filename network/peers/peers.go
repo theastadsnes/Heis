@@ -27,7 +27,7 @@ func Transmitter(port int, id string, transmitEnable <-chan bool) {
 	for {
 		select {
 		case enable = <-transmitEnable:
-			//fmt.Println("-----------transmitting--------------")
+		
 		case <-time.After(interval):
 		}
 		if enable {
