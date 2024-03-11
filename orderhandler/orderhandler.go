@@ -154,7 +154,7 @@ func HasRequests(elevator *config.Elevator) bool {
 }
 
 func WriteToBackup(elevator *config.Elevator) {
-	filename := "Orderhandler/cabOrder.txt"
+	filename := "orderhandler/cabOrder.txt"
 	f, err := os.Create(filename)
 	if err != nil {
 		return
@@ -176,7 +176,7 @@ func WriteToBackup(elevator *config.Elevator) {
 }
 
 func ReadFromBackup(buttons chan elevio.ButtonEvent) {
-	filename := "Orderhandler/cabOrder.txt"
+	filename := "orderhandler/cabOrder.txt"
 	f, err := os.ReadFile(filename)
 	if err != nil {
 		return
@@ -223,7 +223,7 @@ func UpdateLights(elevator *config.Elevator, elevatorsMap map[string]config.Elev
 func OpenDoor(elevator *config.Elevator, doorTimer *time.Timer) {
 	elevio.SetDoorOpenLamp(true)
 	ClearRequestAtFloor(elevator)
-	elevator.Behavior = config.EB_DoorOpen
+	elevator.Behaviour = config.EB_DoorOpen
 	doorTimer.Reset(time.Duration(3) * time.Second)
 }
 
@@ -238,4 +238,11 @@ func GoToValidFloor(elevator *config.Elevator) {
 	}
 	elevator.Dirn = elevio.MD_Stop
 	elevio.SetMotorDirection(elevator.Dirn)
+}
+
+func StartMotor(elevator *config.Elevator, direction elevio.MotorDirection, motorFaultTimer *time.Timer) {
+	elevator.Dirn = direction
+	elevio.SetMotorDirection(elevator.Dirn)
+	elevator.Behaviour = config.EB_Moving
+	motorFaultTimer.Reset(time.Second * 4)
 }

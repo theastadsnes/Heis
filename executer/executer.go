@@ -27,7 +27,6 @@ import (
 
 func Fsm(elevator *config.Elevator, doorTimer *time.Timer, motorFaultTimer *time.Timer, numFloors int, elevatorsMap map[string]config.Elevator, hardware config.Hardwarechannels, network config.Networkchannels, peerTxEnable chan bool) {
 	orderhandler.ClearLights()
-	//elevatorsMap := make(map[string]config.Elevator)
 
 	for {
 		select {
@@ -37,11 +36,11 @@ func Fsm(elevator *config.Elevator, doorTimer *time.Timer, motorFaultTimer *time
 			orderhandler.UpdateLights(elevator, elevatorsMap)
 
 		case order := <-hardware.Drv_buttons:
-			//peerTxEnable <- true
+
 			if order.Button == 2 {
-				statemachines.CabOrderFSM(elevator, order.Floor, order.Button, doorTimer)
+				statemachines.CabOrderFSM(elevator, order.Floor, order.Button, doorTimer, motorFaultTimer)
 			} else {
-				//elevator.Requests[order.Floor][order.Button] = 1
+
 				elevatorsMapCopy := elevatorsMap
 				elevatorsMapCopy[elevator.Id].Requests[order.Floor][order.Button] = true
 
@@ -52,14 +51,13 @@ func Fsm(elevator *config.Elevator, doorTimer *time.Timer, motorFaultTimer *time
 			}
 
 		case newAssignedHallOrders := <-network.OrderChanRx:
-			// fmt.Println("ASSIGNING HALL ORDER")
-			// fmt.Println(newAssignedHallOrders)
+
 			network.AckChanTx <- elevator.Id
 
 			statemachines.HallOrderFSM(elevator, newAssignedHallOrders, doorTimer, motorFaultTimer)
 
 		case floor := <-hardware.Drv_floors:
-			//peerTxEnable <- true
+
 			elevator.Floor = floor
 
 			elevio.SetFloorIndicator(floor)
@@ -73,11 +71,6 @@ func Fsm(elevator *config.Elevator, doorTimer *time.Timer, motorFaultTimer *time
 			if orderhandler.ShouldStop(elevator) {
 				elevio.SetMotorDirection(elevio.MD_Stop)
 				orderhandler.OpenDoor(elevator, doorTimer)
-
-				// elevio.SetDoorOpenLamp(true)
-				// orderhandler.ClearRequestAtFloor(elevator)
-				// elevator.Behaviour = config.EB_DoorOpen
-				// doorTimer.Reset(time.Duration(3) * time.Second)
 				motorFaultTimer.Stop()
 			}
 
@@ -126,25 +119,13 @@ func Fsm(elevator *config.Elevator, doorTimer *time.Timer, motorFaultTimer *time
 			fmt.Println("MOTORFAULT", elevator.Floor)
 			peerTxEnable <- false
 
-			orderhandler.GoToValidFloor()
-			// for elevio.GetFloor() == -1 {
-			// 	if elevator.Dirn == elevio.MD_Down {
-			// 		elevio.SetMotorDirection(elevio.MD_Down)
-			// 	}
-			// 	if elevator.Dirn == elevio.MD_Up {
-			// 		elevio.SetMotorDirection(elevio.MD_Up)
-			// 	}
-
-			// }
+			orderhandler.GoToValidFloor(elevator)
 
 			if !elevio.GetObstruction() {
 
 				peerTxEnable <- true
+				orderhandler.OpenDoor(elevator, doorTimer)
 
-				orderhandler.OpenDoor(elevator, dooTimer)
-				// elevio.SetDoorOpenLamp(true)
-				// elevator.Behaviour = config.EB_DoorOpen
-				// doorTimer.Reset(time.Duration(3) * time.Second)
 			}
 
 		}
