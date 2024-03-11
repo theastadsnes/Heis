@@ -38,7 +38,7 @@ func AssignHallOrders(orderChanTx chan *AssignmentResults, ElevatorsMap map[stri
 	fmt.Println("-----Transformed states-----", transStates)
 	hallRequests := PrepareHallRequests(ElevatorsMap)
 	newOrders := GetRequestStruct(hallRequests, transStates)
-	//orderChanTx <- &newOrders
+
 	go WaitForAllACKs(orderChanTx, ElevatorsMap, ackChanRx, newOrders)
 
 }
@@ -173,19 +173,18 @@ func WaitForAllACKs(orderChanTx chan *AssignmentResults, ElevatorsMap map[string
 	drainAckChannel(ackChanRx)
 	acksReceived := make(map[string]bool)
 	for id := range ElevatorsMap {
-		acksReceived[id] = false // Initially, no ACKs received
+		acksReceived[id] = false 
 	}
 
 	for {
 		select {
 		case orderChanTx <- &newOrders:
-			// fmt.Println("----------ny ordre sendt-----------")
+			
 		case ackID := <-ackChanRx:
-			// fmt.Println(ackID)
-			// fmt.Println("------------ack recieved-----------")
+			
 			if _, ok := acksReceived[ackID]; ok {
-				acksReceived[ackID] = true // Mark ACK as received
-				// Check if ACKs received from all elevators
+				acksReceived[ackID] = true 
+				
 				allAcked := true
 				for _, acked := range acksReceived {
 					if !acked {

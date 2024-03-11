@@ -62,6 +62,7 @@ func updateHallOrders(elevator *config.Elevator, orderFloor *[config.NumFloors][
 					elevator.Requests[floor][elevio.BT_HallUp] = false
 
 				}
+
 				if assignments.DownRequests[floor] {
 					elevator.Requests[floor][elevio.BT_HallDown] = true
 					orderFloor[floor][elevio.BT_HallDown] = true
