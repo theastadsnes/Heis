@@ -1,8 +1,8 @@
-package Assigner
+package assigner
 
 import (
-	"Heis/Driver/elevio"
 	"Heis/config"
+	"Heis/driver/elevio"
 	"encoding/json"
 	"fmt"
 	"os/exec"
@@ -50,9 +50,9 @@ func Costfunc(hallRequests [][2]bool, states map[string]config.HRAElevState) (ma
 func getExecutableName() string {
 	switch runtime.GOOS {
 	case "linux":
-		return "Executables/hall_request_assigner"
+		return "executables/hall_request_assigner"
 	case "windows":
-		return "Executables/hall_request_assigner.exe"
+		return "executables/hall_request_assigner.exe"
 	default:
 		panic("OS not supported")
 	}

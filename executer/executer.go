@@ -3,13 +3,13 @@
  * @brief Contains the finite state machine (FSM) logic for elevator control.
  */
 
-package Executer
+package executer
 
 import (
-	"Heis/Assigner"
-	"Heis/Driver/elevio"
-	"Heis/Orderhandler"
+	"Heis/assigner"
 	"Heis/config"
+	"Heis/driver/elevio"
+	"Heis/orderhandler"
 	"Heis/statemachines"
 	"fmt"
 	"time"
@@ -26,7 +26,7 @@ import (
  */
 
 func Fsm(elevator *config.Elevator, doorTimer *time.Timer, motorFaultTimer *time.Timer, numFloors int, elevatorsMap map[string]config.Elevator, hardware config.Hardwarechannels, network config.Networkchannels, peerTxEnable chan bool) {
-	Orderhandler.ClearLights()
+	orderhandler.ClearLights()
 	//elevatorsMap := make(map[string]config.Elevator)
 
 	for {
@@ -34,7 +34,7 @@ func Fsm(elevator *config.Elevator, doorTimer *time.Timer, motorFaultTimer *time
 		case stateReceived := <-network.StateRx:
 
 			elevatorsMap[stateReceived.Id] = *stateReceived
-			Orderhandler.UpdateLights(elevator, elevatorsMap)
+			orderhandler.UpdateLights(elevator, elevatorsMap)
 
 		case order := <-hardware.Drv_buttons:
 			//peerTxEnable <- true
@@ -46,7 +46,7 @@ func Fsm(elevator *config.Elevator, doorTimer *time.Timer, motorFaultTimer *time
 				elevatorsMapCopy[elevator.Id].Requests[order.Floor][order.Button] = true
 
 				if elevator.IsOnline {
-					Assigner.AssignHallOrders(network.OrderChanTx, elevatorsMapCopy, network.AckChanRx)
+					assigner.AssignHallOrders(network.OrderChanTx, elevatorsMapCopy, network.AckChanRx)
 				}
 
 			}
@@ -70,10 +70,10 @@ func Fsm(elevator *config.Elevator, doorTimer *time.Timer, motorFaultTimer *time
 				motorFaultTimer.Stop()
 			}
 
-			if Orderhandler.ShouldStop(elevator) {
+			if orderhandler.ShouldStop(elevator) {
 				elevio.SetMotorDirection(elevio.MD_Stop)
 				elevio.SetDoorOpenLamp(true)
-				Orderhandler.ClearRequestAtFloor(elevator, doorTimer)
+				orderhandler.ClearRequestAtFloor(elevator, doorTimer)
 				elevator.Behaviour = config.EB_DoorOpen
 				doorTimer.Reset(time.Duration(3) * time.Second)
 				motorFaultTimer.Stop()
@@ -85,7 +85,7 @@ func Fsm(elevator *config.Elevator, doorTimer *time.Timer, motorFaultTimer *time
 				elevio.SetDoorOpenLamp(false)
 				switch {
 				case elevator.Behaviour == config.EB_DoorOpen:
-					Orderhandler.RequestsChooseDirection(elevator)
+					orderhandler.RequestsChooseDirection(elevator)
 					elevio.SetMotorDirection(elevator.Dirn)
 					if elevator.Dirn == elevio.MD_Stop {
 						elevator.Behaviour = config.EB_Idle
@@ -145,6 +145,6 @@ func Fsm(elevator *config.Elevator, doorTimer *time.Timer, motorFaultTimer *time
 
 		}
 
-		Orderhandler.WriteToBackup(elevator)
+		orderhandler.WriteToBackup(elevator)
 	}
 }

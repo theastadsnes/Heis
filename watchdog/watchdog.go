@@ -1,8 +1,8 @@
 package watchdog
 
 import (
-	"Heis/Assigner"
-	"Heis/Network/peers"
+	"Heis/assigner"
+	"Heis/network/peers"
 	"Heis/config"
 	"fmt"
 	"time"
@@ -31,7 +31,7 @@ func Watchdog(elevator *config.Elevator, peers chan peers.PeerUpdate, elevatorsM
 					}
 					lostElevatorsStates = make(map[string]config.Elevator)
 					if elevator.Id == peersUpdate.Peers[0] {
-						Assigner.AssignHallOrders(orderChanTx, elevatorsMap, ackChanRx)
+						assigner.AssignHallOrders(orderChanTx, elevatorsMap, ackChanRx)
 					}
 				}
 			} else {

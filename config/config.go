@@ -1,9 +1,9 @@
 package config
 
 import (
-	"Heis/Driver/elevio"
-	"Heis/Network/localip"
-	"Heis/Network/peers"
+	"Heis/driver/elevio"
+	"Heis/network/localip"
+	"Heis/network/peers"
 	"flag"
 	"fmt"
 	"os"

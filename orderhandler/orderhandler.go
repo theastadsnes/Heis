@@ -1,8 +1,8 @@
-package Orderhandler
+package orderhandler
 
 import (
-	"Heis/Driver/elevio"
 	"Heis/config"
+	"Heis/driver/elevio"
 	"fmt"
 	"os"
 	"strconv"

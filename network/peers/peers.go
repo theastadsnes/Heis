@@ -1,7 +1,7 @@
 package peers
 
 import (
-	"Heis/Network/conn"
+	"Heis/network/conn"
 	"fmt"
 	"net"
 	"sort"
