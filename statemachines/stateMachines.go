@@ -1,9 +1,9 @@
 package statemachines
 
 import (
+	"Heis/config"
 	"Heis/driver/elevio"
 	"Heis/orderhandler"
-	"Heis/config"
 	"time"
 )
 
@@ -14,9 +14,10 @@ func CabOrderFSM(elevator *config.Elevator, orderFloor int, orderButton elevio.B
 	switch {
 	case elevator.Behaviour == config.EB_DoorOpen:
 		if orderFloor == elevator.Floor {
-			elevio.SetDoorOpenLamp(true)
-			orderhandler.ClearRequestAtFloor(elevator, doorTimer)
-			doorTimer.Reset(time.Duration(3) * time.Second)
+			orderhandler.OpenDoor(elevator, doorTimer)
+			// elevio.SetDoorOpenLamp(true)
+			// orderhandler.ClearRequestAtFloor(elevator)
+			// doorTimer.Reset(time.Duration(3) * time.Second)
 		} else {
 			elevator.Requests[orderFloor][orderButton] = true
 		}
@@ -25,10 +26,11 @@ func CabOrderFSM(elevator *config.Elevator, orderFloor int, orderButton elevio.B
 
 	case elevator.Behaviour == config.EB_Idle:
 		if orderFloor == elevator.Floor {
-			elevio.SetDoorOpenLamp(true)
-			orderhandler.ClearRequestAtFloor(elevator, doorTimer)
-			elevator.Behaviour = config.EB_DoorOpen
-			doorTimer.Reset(time.Duration(3) * time.Second)
+			orderhandler.OpenDoor(elevator, doorTimer)
+			// elevio.SetDoorOpenLamp(true)
+			// orderhandler.ClearRequestAtFloor(elevator)
+			// elevator.Behaviour = config.EB_DoorOpen
+			// doorTimer.Reset(time.Duration(3) * time.Second)
 		} else {
 			elevator.Requests[orderFloor][orderButton] = true
 			if orderhandler.RequestsAbove(elevator) {
@@ -84,25 +86,29 @@ func HallOrderFSM(elevator *config.Elevator, newAssignedOrders *config.Assignmen
 				case elevator.Behaviour == config.EB_DoorOpen:
 
 					if floor == elevator.Floor {
-						elevio.SetDoorOpenLamp(true)
-						orderhandler.ClearRequestAtFloor(elevator, doorTimer)
-						doorTimer.Reset(time.Duration(3) * time.Second)
+						orderhandler.OpenDoor(elevator, doorTimer)
+						// elevio.SetDoorOpenLamp(true)
+						// orderhandler.ClearRequestAtFloor(elevator)
+						// doorTimer.Reset(time.Duration(3) * time.Second)
 					}
 				case (elevator.Behaviour == config.EB_Moving) && !orderhandler.HasRequests(elevator):
-					for elevio.GetFloor() == -1 {
-						if elevator.Dirn == elevio.MD_Down {
-							elevio.SetMotorDirection(elevio.MD_Down)
-						}
-						if elevator.Dirn == elevio.MD_Up {
-							elevio.SetMotorDirection(elevio.MD_Up)
-						}
-					}
+					// for elevio.GetFloor() == -1 {
+					// 	if elevator.Dirn == elevio.MD_Down {
+					// 		elevio.SetMotorDirection(elevio.MD_Down)
+					// 	}
+					// 	if elevator.Dirn == elevio.MD_Up {
+					// 		elevio.SetMotorDirection(elevio.MD_Up)
+					// 	}
+					// }
+					orderhandler.GoToValidFloor(elevator)
 				case elevator.Behaviour == config.EB_Idle:
 					if floor == elevator.Floor {
-						elevio.SetDoorOpenLamp(true)
-						orderhandler.ClearRequestAtFloor(elevator, doorTimer)
-						elevator.Behaviour = config.EB_DoorOpen
-						doorTimer.Reset(time.Duration(3) * time.Second)
+						orderhandler.OpenDoor(elevator, doorTimer)
+
+						// elevio.SetDoorOpenLamp(true)
+						// orderhandler.ClearRequestAtFloor(elevator)
+						// elevator.Behaviour = config.EB_DoorOpen
+						// doorTimer.Reset(time.Duration(3) * time.Second)
 					} else {
 						if orderhandler.RequestsAbove(elevator) {
 							elevator.Dirn = elevio.MD_Up

@@ -72,10 +72,12 @@ func Fsm(elevator *config.Elevator, doorTimer *time.Timer, motorFaultTimer *time
 
 			if orderhandler.ShouldStop(elevator) {
 				elevio.SetMotorDirection(elevio.MD_Stop)
-				elevio.SetDoorOpenLamp(true)
-				orderhandler.ClearRequestAtFloor(elevator, doorTimer)
-				elevator.Behaviour = config.EB_DoorOpen
-				doorTimer.Reset(time.Duration(3) * time.Second)
+				orderhandler.OpenDoor(elevator, doorTimer)
+
+				// elevio.SetDoorOpenLamp(true)
+				// orderhandler.ClearRequestAtFloor(elevator)
+				// elevator.Behaviour = config.EB_DoorOpen
+				// doorTimer.Reset(time.Duration(3) * time.Second)
 				motorFaultTimer.Stop()
 			}
 
@@ -124,23 +126,25 @@ func Fsm(elevator *config.Elevator, doorTimer *time.Timer, motorFaultTimer *time
 			fmt.Println("MOTORFAULT", elevator.Floor)
 			peerTxEnable <- false
 
-			for elevio.GetFloor() == -1 {
-				if elevator.Dirn == elevio.MD_Down {
-					elevio.SetMotorDirection(elevio.MD_Down)
-				}
-				if elevator.Dirn == elevio.MD_Up {
-					elevio.SetMotorDirection(elevio.MD_Up)
-				}
+			orderhandler.GoToValidFloor()
+			// for elevio.GetFloor() == -1 {
+			// 	if elevator.Dirn == elevio.MD_Down {
+			// 		elevio.SetMotorDirection(elevio.MD_Down)
+			// 	}
+			// 	if elevator.Dirn == elevio.MD_Up {
+			// 		elevio.SetMotorDirection(elevio.MD_Up)
+			// 	}
 
-			}
+			// }
 
 			if !elevio.GetObstruction() {
-				elevator.Dirn = elevio.MD_Stop
-				elevio.SetMotorDirection(elevator.Dirn)
+
 				peerTxEnable <- true
-				elevio.SetDoorOpenLamp(true)
-				elevator.Behaviour = config.EB_DoorOpen
-				doorTimer.Reset(time.Duration(3) * time.Second)
+
+				orderhandler.OpenDoor(elevator, dooTimer)
+				// elevio.SetDoorOpenLamp(true)
+				// elevator.Behaviour = config.EB_DoorOpen
+				// doorTimer.Reset(time.Duration(3) * time.Second)
 			}
 
 		}

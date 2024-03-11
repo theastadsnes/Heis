@@ -78,7 +78,7 @@ func ClearLights() {
 
 }
 
-func ClearRequestAtFloor(e *config.Elevator, doorTimer *time.Timer) {
+func ClearRequestAtFloor(e *config.Elevator) {
 	e.Requests[e.Floor][int(elevio.BT_Cab)] = false
 	elevio.SetButtonLamp(elevio.BT_Cab, e.Floor, false)
 
@@ -218,4 +218,24 @@ func UpdateLights(elevator *config.Elevator, elevatorsMap map[string]config.Elev
 			elevio.SetButtonLamp(elevio.ButtonType(button), floor, lights[floor][button])
 		}
 	}
+}
+
+func OpenDoor(elevator *config.Elevator, doorTimer *time.Timer) {
+	elevio.SetDoorOpenLamp(true)
+	ClearRequestAtFloor(elevator)
+	elevator.Behavior = config.EB_DoorOpen
+	doorTimer.Reset(time.Duration(3) * time.Second)
+}
+
+func GoToValidFloor(elevator *config.Elevator) {
+	for elevio.GetFloor() == -1 {
+		if elevator.Dirn == elevio.MD_Down {
+			elevio.SetMotorDirection(elevio.MD_Down)
+		}
+		if elevator.Dirn == elevio.MD_Up {
+			elevio.SetMotorDirection(elevio.MD_Up)
+		}
+	}
+	elevator.Dirn = elevio.MD_Stop
+	elevio.SetMotorDirection(elevator.Dirn)
 }

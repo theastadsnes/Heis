@@ -151,18 +151,18 @@ func WaitForAllACKs(orderChanTx chan *config.AssignmentResults, ElevatorsMap map
 	drainAckChannel(ackChanRx)
 	acksReceived := make(map[string]bool)
 	for id := range ElevatorsMap {
-		acksReceived[id] = false 
+		acksReceived[id] = false
 	}
 
 	for {
 		select {
 		case orderChanTx <- &newOrders:
-			
+
 		case ackID := <-ackChanRx:
-			
+
 			if _, ok := acksReceived[ackID]; ok {
-				acksReceived[ackID] = true 
-				
+				acksReceived[ackID] = true
+
 				allAcked := true
 				for _, acked := range acksReceived {
 					if !acked {
