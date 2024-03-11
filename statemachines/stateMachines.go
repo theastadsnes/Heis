@@ -19,7 +19,7 @@ func CabOrderFSM(elevator *config.Elevator, orderFloor int, orderButton elevio.B
 		case elevator.Behaviour == config.EB_DoorOpen:
 			if orderFloor == elevator.Floor {
 				elevio.SetDoorOpenLamp(true)
-				requests.Clear_request_at_floor(elevator, doorTimer)
+				requests.ClearRequestAtFloor(elevator, doorTimer)
 				doorTimer.Reset(time.Duration(3) * time.Second)
 			} else {
 				elevator.Requests[orderFloor][orderButton] = 1
@@ -30,17 +30,17 @@ func CabOrderFSM(elevator *config.Elevator, orderFloor int, orderButton elevio.B
 		case elevator.Behaviour == config.EB_Idle:
 			if orderFloor == elevator.Floor {
 				elevio.SetDoorOpenLamp(true)
-				requests.Clear_request_at_floor(elevator, doorTimer)
+				requests.ClearRequestAtFloor(elevator, doorTimer)
 				elevator.Behaviour = config.EB_DoorOpen
 				doorTimer.Reset(time.Duration(3) * time.Second)
 			} else {
 				elevator.Requests[orderFloor][orderButton] = 1
-				if requests.Requests_above(elevator) {
+				if requests.RequestsAbove(elevator) {
 					elevator.Dirn = elevio.MD_Up
 					elevio.SetMotorDirection(elevator.Dirn)
 					elevator.Behaviour = config.EB_Moving
 
-				} else if requests.Requests_below(elevator) {
+				} else if requests.RequestsBelow(elevator) {
 					elevator.Dirn = elevio.MD_Down
 					elevio.SetMotorDirection(elevator.Dirn)
 					elevator.Behaviour = config.EB_Moving
@@ -91,7 +91,7 @@ func HallOrderFSM(elevator *config.Elevator, newAssignedOrders *costfunc.Assignm
 
 					if floor == elevator.Floor {
 						elevio.SetDoorOpenLamp(true)
-						requests.Clear_request_at_floor(elevator, doorTimer)
+						requests.ClearRequestAtFloor(elevator, doorTimer)
 						doorTimer.Reset(time.Duration(3) * time.Second)
 					}
 				case (elevator.Behaviour == config.EB_Moving) && !requests.HasRequests(elevator):
@@ -106,16 +106,16 @@ func HallOrderFSM(elevator *config.Elevator, newAssignedOrders *costfunc.Assignm
 				case elevator.Behaviour == config.EB_Idle:
 					if floor == elevator.Floor {
 						elevio.SetDoorOpenLamp(true)
-						requests.Clear_request_at_floor(elevator, doorTimer)
+						requests.ClearRequestAtFloor(elevator, doorTimer)
 						elevator.Behaviour = config.EB_DoorOpen
 						doorTimer.Reset(time.Duration(3) * time.Second)
 					} else {
-						if requests.Requests_above(elevator) {
+						if requests.RequestsAbove(elevator) {
 							elevator.Dirn = elevio.MD_Up
 							elevio.SetMotorDirection(elevator.Dirn)
 							elevator.Behaviour = config.EB_Moving
 							motorFaultTimer.Reset(time.Second * 4)
-						} else if requests.Requests_below(elevator) {
+						} else if requests.RequestsBelow(elevator) {
 							elevator.Dirn = elevio.MD_Down
 							elevio.SetMotorDirection(elevator.Dirn)
 							elevator.Behaviour = config.EB_Moving

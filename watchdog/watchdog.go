@@ -26,7 +26,7 @@ func WatchDogLostPeers(elevator *config.Elevator, peers chan peers.PeerUpdate, e
 			fmt.Printf("  Lost:     %q\n", peersUpdate.Lost)
 			if len(peersUpdate.Peers) != 0 {
 				elevator.IsOnline = true
-				
+
 				if len(peersUpdate.Lost) != 0 {
 					addToLostElevatorsMap(peersUpdate, elevatorsMap, lostElevatorsStates)
 					transferOrders(elevator, peersUpdate, lostElevatorsStates)
@@ -41,7 +41,7 @@ func WatchDogLostPeers(elevator *config.Elevator, peers chan peers.PeerUpdate, e
 					}
 
 				}
-			}else{
+			} else {
 				elevator.IsOnline = false
 			}
 			// if len(peersUpdate.New) != 0 {

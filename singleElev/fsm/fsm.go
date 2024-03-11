@@ -27,7 +27,7 @@ import (
  */
 
 func Fsm(elevator *config.Elevator, buttons chan elevio.ButtonEvent, floors chan int, obstr chan bool, stop chan bool, doorTimer *time.Timer, numFloors int, orderChanRx chan *costfunc.AssignmentResults, orderChanTx chan *costfunc.AssignmentResults, stateRx chan *config.Elevator, stateTx chan *config.Elevator, elevatorsMap map[string]config.Elevator, motorFaultTimer *time.Timer, peerTxEnable chan bool, ackChanRx chan string, ackChanTx chan string) {
-	requests.Clear_lights()
+	requests.ClearLights()
 	//elevatorsMap := make(map[string]config.Elevator)
 
 	for {
@@ -71,10 +71,10 @@ func Fsm(elevator *config.Elevator, buttons chan elevio.ButtonEvent, floors chan
 				motorFaultTimer.Stop()
 			}
 
-			if requests.Should_stop(elevator) {
+			if requests.ShouldStop(elevator) {
 				elevio.SetMotorDirection(elevio.MD_Stop)
 				elevio.SetDoorOpenLamp(true)
-				requests.Clear_request_at_floor(elevator, doorTimer)
+				requests.ClearRequestAtFloor(elevator, doorTimer)
 				elevator.Behaviour = config.EB_DoorOpen
 				doorTimer.Reset(time.Duration(3) * time.Second)
 				motorFaultTimer.Stop()
@@ -86,7 +86,7 @@ func Fsm(elevator *config.Elevator, buttons chan elevio.ButtonEvent, floors chan
 				elevio.SetDoorOpenLamp(false)
 				switch {
 				case elevator.Behaviour == config.EB_DoorOpen:
-					requests.Requests_chooseDirection(elevator)
+					requests.RequestsChooseDirection(elevator)
 					elevio.SetMotorDirection(elevator.Dirn)
 					if elevator.Dirn == elevio.MD_Stop {
 						elevator.Behaviour = config.EB_Idle
@@ -147,8 +147,8 @@ func Fsm(elevator *config.Elevator, buttons chan elevio.ButtonEvent, floors chan
 		case a := <-stop:
 			if a {
 				elevio.SetMotorDirection(elevio.MD_Stop)
-				requests.Clear_lights()
-				requests.Clear_all_requests(numFloors, elevator)
+				requests.ClearLights()
+				requests.ClearAllRequests(numFloors, elevator)
 				elevio.SetStopLamp(true)
 
 				if elevator.Behaviour != config.EB_Moving {
@@ -164,8 +164,8 @@ func Fsm(elevator *config.Elevator, buttons chan elevio.ButtonEvent, floors chan
 
 				}
 			} else {
-				requests.Clear_lights()
-				requests.Clear_request_at_floor(elevator, doorTimer)
+				requests.ClearLights()
+				requests.ClearRequestAtFloor(elevator, doorTimer)
 				elevio.SetStopLamp(false)
 
 				if elevator.Behaviour != config.EB_Moving {
