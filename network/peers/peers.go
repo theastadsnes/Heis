@@ -23,9 +23,11 @@ func Transmitter(port int, id string, transmitEnable <-chan bool) {
 	addr, _ := net.ResolveUDPAddr("udp4", fmt.Sprintf("255.255.255.255:%d", port))
 
 	enable := true
+
 	for {
 		select {
 		case enable = <-transmitEnable:
+			//fmt.Println("-----------transmitting--------------")
 		case <-time.After(interval):
 		}
 		if enable {

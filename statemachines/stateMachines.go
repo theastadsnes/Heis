@@ -94,7 +94,15 @@ func HallOrderFSM(elevator *config.Elevator, newAssignedOrders *costfunc.Assignm
 						requests.Clear_request_at_floor(elevator, doorTimer)
 						doorTimer.Reset(time.Duration(3) * time.Second)
 					}
-
+				case (elevator.Behaviour == config.EB_Moving) && !requests.HasRequests(elevator):
+					for elevio.GetFloor() == -1 {
+						if elevator.Dirn == elevio.MD_Down {
+							elevio.SetMotorDirection(elevio.MD_Down)
+						}
+						if elevator.Dirn == elevio.MD_Up {
+							elevio.SetMotorDirection(elevio.MD_Up)
+						}
+					}
 				case elevator.Behaviour == config.EB_Idle:
 					if floor == elevator.Floor {
 						elevio.SetDoorOpenLamp(true)

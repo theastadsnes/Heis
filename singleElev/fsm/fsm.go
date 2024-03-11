@@ -60,7 +60,7 @@ func Fsm(elevator *config.Elevator, buttons chan elevio.ButtonEvent, floors chan
 			statemachines.HallOrderFSM(elevator, newAssignedHallOrders, doorTimer, motorFaultTimer)
 
 		case floor := <-floors:
-			peerTxEnable <- true
+			//peerTxEnable <- true
 			elevator.Floor = floor
 
 			elevio.SetFloorIndicator(floor)
@@ -118,6 +118,7 @@ func Fsm(elevator *config.Elevator, buttons chan elevio.ButtonEvent, floors chan
 			} else if elevator.Behaviour == config.EB_DoorOpen {
 				motorFaultTimer.Stop()
 				doorTimer.Reset(time.Duration(3) * time.Second)
+				peerTxEnable <- true
 			}
 
 		case <-motorFaultTimer.C:
@@ -133,11 +134,15 @@ func Fsm(elevator *config.Elevator, buttons chan elevio.ButtonEvent, floors chan
 				}
 
 			}
-			elevator.Dirn = elevio.MD_Stop
-			elevio.SetMotorDirection(elevator.Dirn)
-			elevio.SetDoorOpenLamp(true)
-			elevator.Behaviour = config.EB_DoorOpen
-			doorTimer.Reset(time.Duration(3) * time.Second)
+
+			if !elevio.GetObstruction() {
+				elevator.Dirn = elevio.MD_Stop
+				elevio.SetMotorDirection(elevator.Dirn)
+				peerTxEnable <- true
+				elevio.SetDoorOpenLamp(true)
+				elevator.Behaviour = config.EB_DoorOpen
+				doorTimer.Reset(time.Duration(3) * time.Second)
+			}
 
 		case a := <-stop:
 			if a {
