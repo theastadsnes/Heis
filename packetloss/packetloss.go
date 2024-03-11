@@ -23,10 +23,10 @@ func WaitForAllACKs(orderChanTx chan *costfunc.AssignmentResults, ElevatorsMap m
 	for {
 		select {
 		case orderChanTx <- &newOrders:
-			fmt.Println("----------ny ordre sendt-----------")
+			// fmt.Println("----------ny ordre sendt-----------")
 		case ackID := <-ackChanRx:
-			fmt.Println(ackID)
-			fmt.Println("------------ack recieved-----------")
+			// fmt.Println(ackID)
+			// fmt.Println("------------ack recieved-----------")
 			if _, ok := acksReceived[ackID]; ok {
 				acksReceived[ackID] = true // Mark ACK as received
 				// Check if ACKs received from all elevators

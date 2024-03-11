@@ -81,7 +81,7 @@ func HallOrderFSM(elevator *config.Elevator, newAssignedOrders *costfunc.Assignm
 
 	var orderFloor [config.NumFloors][config.NumButtons - 1]bool
 	updateHallOrders(elevator, &orderFloor, newAssignedOrders)
-	fmt.Println(orderFloor)
+	
 
 	for floor := 0; floor < config.NumFloors; floor++ {
 		for button := 0; button < config.NumButtons-1; button++ {
@@ -131,6 +131,7 @@ func HallOrderFSM(elevator *config.Elevator, newAssignedOrders *costfunc.Assignm
 func AssignHallOrders(orderChanTx chan *costfunc.AssignmentResults, ElevatorsMap map[string]config.Elevator, ackChanRx chan string) {
 
 	transStates := costfunc.TransformElevatorStates(ElevatorsMap)
+	fmt.Println("-----Transformed states-----", transStates)
 	hallRequests := costfunc.PrepareHallRequests(ElevatorsMap)
 	newOrders := costfunc.GetRequestStruct(hallRequests, transStates)
 	//orderChanTx <- &newOrders

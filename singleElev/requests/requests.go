@@ -12,8 +12,8 @@ import (
 	"time"
 )
 
-var Floors int = 4  // Number of floors in the building
-var Buttons int = 4 // Number of elevator buttons (e.g., Up, Down, Cab)
+// var Floors int = 4  // Number of floors in the building
+// var Buttons int = 4 // Number of elevator buttons (e.g., Up, Down, Cab)
 
 /**
  * @brief Checks if there are any requests above the current floor.
@@ -21,8 +21,8 @@ var Buttons int = 4 // Number of elevator buttons (e.g., Up, Down, Cab)
  * @return Returns true if there are requests above the current floor, otherwise false.
  */
 func RequestsAbove(e *config.Elevator) bool {
-	for f := e.Floor + 1; f < Floors; f++ {
-		for b := 0; b < Buttons; b++ {
+	for f := e.Floor + 1; f < config.NumFloors; f++ {
+		for b := 0; b < config.NumButtons; b++ {
 			if e.Requests[f][b] {
 				return true
 			}
@@ -38,7 +38,7 @@ func RequestsAbove(e *config.Elevator) bool {
  */
 func RequestsBelow(e *config.Elevator) bool {
 	for f := e.Floor - 1; f >= 0; f-- {
-		for b := 0; b < Buttons; b++ {
+		for b := 0; b < config.NumButtons; b++ {
 			if e.Requests[f][b] {
 				return true
 			}
@@ -53,8 +53,8 @@ func RequestsBelow(e *config.Elevator) bool {
  * @return Returns true if there are requests on the current floor, otherwise false.
  */
 func RequestsCurrentFloor(e *config.Elevator) bool {
-	for b := 0; b < Buttons; b++ {
-		if e.Requests[e.Floor][b]{
+	for b := 0; b < config.NumButtons; b++ {
+		if e.Requests[e.Floor][b] {
 			return true
 		}
 	}
@@ -99,7 +99,7 @@ func ShouldStop(e *config.Elevator) bool {
  * @brief Clears all button lights in the elevator.
  */
 func ClearLights() {
-	for f := 0; f < Floors; f++ {
+	for f := 0; f < config.NumFloors; f++ {
 		elevio.SetButtonLamp(0, f, false)
 		elevio.SetButtonLamp(1, f, false)
 		elevio.SetButtonLamp(2, f, false)
@@ -182,8 +182,8 @@ func RequestsChooseDirection(e *config.Elevator) {
  * @param numFloors Number of floors
  */
 func ClearAllRequests(numFloors int, e *config.Elevator) {
-	for floor := 0; floor < numFloors; floor++ {
-		for button := elevio.ButtonType(0); button < 3; button++ {
+	for floor := 0; floor < config.NumFloors; floor++ {
+		for button := elevio.ButtonType(0); button < config.NumButtons; button++ {
 			e.Requests[floor][button] = false
 			elevio.SetButtonLamp(button, floor, false)
 		}

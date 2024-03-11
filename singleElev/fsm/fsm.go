@@ -53,8 +53,8 @@ func Fsm(elevator *config.Elevator, buttons chan elevio.ButtonEvent, floors chan
 			}
 
 		case newAssignedHallOrders := <-orderChanRx:
-			fmt.Println("ASSIGNING HALL ORDER")
-			fmt.Println(newAssignedHallOrders)
+			// fmt.Println("ASSIGNING HALL ORDER")
+			// fmt.Println(newAssignedHallOrders)
 			ackChanTx <- elevator.Id
 
 			statemachines.HallOrderFSM(elevator, newAssignedHallOrders, doorTimer, motorFaultTimer)
