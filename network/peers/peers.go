@@ -1,7 +1,7 @@
 package peers
 
 import (
-	"Heis/network/conn"
+	"Heis/Network/conn"
 	"fmt"
 	"net"
 	"sort"
@@ -27,7 +27,7 @@ func Transmitter(port int, id string, transmitEnable <-chan bool) {
 	for {
 		select {
 		case enable = <-transmitEnable:
-		
+
 		case <-time.After(interval):
 		}
 		if enable {

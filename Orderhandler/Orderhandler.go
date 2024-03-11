@@ -44,7 +44,6 @@ func RequestsCurrentFloor(e *config.Elevator) bool {
 func ShouldStop(e *config.Elevator) bool {
 
 	if RequestsCurrentFloor(e) {
-		fmt.Println("retning", e.Dirn)
 
 		switch {
 		case e.Dirn == elevio.MD_Down:
@@ -158,7 +157,6 @@ func WriteToBackup(elevator *config.Elevator) {
 	filename := "Orderhandler/cabOrder.txt"
 	f, err := os.Create(filename)
 	if err != nil {
-		fmt.Println(err)
 		return
 	}
 
@@ -171,7 +169,6 @@ func WriteToBackup(elevator *config.Elevator) {
 	cabordersString := strings.Trim(fmt.Sprint(caborders), "[]")
 	_, err = f.WriteString(cabordersString)
 	if err != nil {
-		fmt.Println(err)
 		return
 	}
 
@@ -182,7 +179,6 @@ func ReadFromBackup(buttons chan elevio.ButtonEvent) {
 	filename := "Orderhandler/cabOrder.txt"
 	f, err := os.ReadFile(filename)
 	if err != nil {
-		fmt.Println(err)
 		return
 	}
 	caborders := make([]bool, 0)
@@ -199,6 +195,27 @@ func ReadFromBackup(buttons chan elevio.ButtonEvent) {
 			backupOrder := elevio.ButtonEvent{Floor: floor, Button: elevio.BT_Cab}
 			buttons <- backupOrder
 			time.Sleep(20 * time.Millisecond)
+		}
+	}
+}
+
+func UpdateLights(elevator *config.Elevator, elevatorsMap map[string]config.Elevator) {
+
+	var lights [config.NumFloors][config.NumButtons - 1]bool
+
+	for _, id := range elevatorsMap {
+		for floor := range id.Requests {
+			for button := 0; button < 2; button++ {
+				if id.Requests[floor][button] {
+					lights[floor][button] = true
+				}
+			}
+		}
+
+	}
+	for floor := 0; floor < config.NumFloors; floor++ {
+		for button := 0; button < config.NumButtons-1; button++ {
+			elevio.SetButtonLamp(elevio.ButtonType(button), floor, lights[floor][button])
 		}
 	}
 }

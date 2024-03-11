@@ -10,29 +10,7 @@ import (
 	"time"
 )
 
-type HRAElevState struct {
-	Behavior    string `json:"behaviour"`
-	Floor       int    `json:"floor"`
-	Direction   string `json:"direction"`
-	CabRequests []bool `json:"cabRequests"`
-}
-
-type HRAInput struct {
-	HallRequests [][2]bool               `json:"hallRequests"`
-	States       map[string]HRAElevState `json:"states"`
-}
-
-type HallRequestAssignment struct {
-	ID           string
-	UpRequests   []bool
-	DownRequests []bool
-}
-
-type AssignmentResults struct {
-	Assignments []HallRequestAssignment
-}
-
-func AssignHallOrders(orderChanTx chan *AssignmentResults, ElevatorsMap map[string]config.Elevator, ackChanRx chan string) {
+func AssignHallOrders(orderChanTx chan *config.AssignmentResults, ElevatorsMap map[string]config.Elevator, ackChanRx chan string) {
 
 	transStates := TransformElevatorStates(ElevatorsMap)
 	fmt.Println("-----Transformed states-----", transStates)
@@ -43,10 +21,10 @@ func AssignHallOrders(orderChanTx chan *AssignmentResults, ElevatorsMap map[stri
 
 }
 
-func Costfunc(hallRequests [][2]bool, states map[string]HRAElevState) (map[string][][2]bool, error) {
+func Costfunc(hallRequests [][2]bool, states map[string]config.HRAElevState) (map[string][][2]bool, error) {
 	hraExecutable := getExecutableName()
 
-	input := HRAInput{
+	input := config.HRAInput{
 		HallRequests: hallRequests,
 		States:       states,
 	}
@@ -80,8 +58,8 @@ func getExecutableName() string {
 	}
 }
 
-func TransformElevatorStates(elevators map[string]config.Elevator) map[string]HRAElevState {
-	states := make(map[string]HRAElevState)
+func TransformElevatorStates(elevators map[string]config.Elevator) map[string]config.HRAElevState {
+	states := make(map[string]config.HRAElevState)
 
 	for id, elev := range elevators {
 		cabRequests := make([]bool, len(elev.Requests))
@@ -91,7 +69,7 @@ func TransformElevatorStates(elevators map[string]config.Elevator) map[string]HR
 
 		}
 
-		states[id] = HRAElevState{
+		states[id] = config.HRAElevState{
 			Behavior:    behaviourToString(elev.Behaviour),
 			Floor:       elev.Floor,
 			Direction:   dirnToString(elev.Dirn),
@@ -120,12 +98,12 @@ func PrepareHallRequests(elevators map[string]config.Elevator) [][2]bool {
 	return hallRequests
 }
 
-func GetRequestStruct(hallRequests [][2]bool, states map[string]HRAElevState) AssignmentResults {
+func GetRequestStruct(hallRequests [][2]bool, states map[string]config.HRAElevState) config.AssignmentResults {
 	output, err := Costfunc(hallRequests, states)
 	if err != nil {
 		fmt.Println("Error calling Costfunc:", err)
 	}
-	var requeststruct AssignmentResults
+	var requeststruct config.AssignmentResults
 
 	for id, floors := range output {
 		var upRequests, downRequests []bool
@@ -133,7 +111,7 @@ func GetRequestStruct(hallRequests [][2]bool, states map[string]HRAElevState) As
 			upRequests = append(upRequests, floor[0])
 			downRequests = append(downRequests, floor[1])
 		}
-		requeststruct.Assignments = append(requeststruct.Assignments, HallRequestAssignment{
+		requeststruct.Assignments = append(requeststruct.Assignments, config.HallRequestAssignment{
 			ID:           id,
 			UpRequests:   upRequests,
 			DownRequests: downRequests,
@@ -169,7 +147,7 @@ func dirnToString(dirn elevio.MotorDirection) string {
 	}
 }
 
-func WaitForAllACKs(orderChanTx chan *AssignmentResults, ElevatorsMap map[string]config.Elevator, ackChanRx chan string, newOrders AssignmentResults) {
+func WaitForAllACKs(orderChanTx chan *config.AssignmentResults, ElevatorsMap map[string]config.Elevator, ackChanRx chan string, newOrders config.AssignmentResults) {
 	drainAckChannel(ackChanRx)
 	acksReceived := make(map[string]bool)
 	for id := range ElevatorsMap {

@@ -1,7 +1,6 @@
 package statemachines
 
 import (
-	"Heis/Assigner"
 	"Heis/Driver/elevio"
 	"Heis/Orderhandler"
 	"Heis/config"
@@ -46,7 +45,7 @@ func CabOrderFSM(elevator *config.Elevator, orderFloor int, orderButton elevio.B
 	}
 }
 
-func updateHallOrders(elevator *config.Elevator, orderFloor *[config.NumFloors][config.NumButtons - 1]bool, newAssignedOrders *Assigner.AssignmentResults) {
+func updateHallOrders(elevator *config.Elevator, orderFloor *[config.NumFloors][config.NumButtons - 1]bool, newAssignedOrders *config.AssignmentResults) {
 
 	for _, assignments := range newAssignedOrders.Assignments {
 		if assignments.ID == elevator.Id {
@@ -72,7 +71,7 @@ func updateHallOrders(elevator *config.Elevator, orderFloor *[config.NumFloors][
 	}
 }
 
-func HallOrderFSM(elevator *config.Elevator, newAssignedOrders *Assigner.AssignmentResults, doorTimer *time.Timer, motorFaultTimer *time.Timer) {
+func HallOrderFSM(elevator *config.Elevator, newAssignedOrders *config.AssignmentResults, doorTimer *time.Timer, motorFaultTimer *time.Timer) {
 
 	var orderFloor [config.NumFloors][config.NumButtons - 1]bool
 	updateHallOrders(elevator, &orderFloor, newAssignedOrders)
@@ -119,27 +118,6 @@ func HallOrderFSM(elevator *config.Elevator, newAssignedOrders *Assigner.Assignm
 
 				}
 			}
-		}
-	}
-}
-
-func UpdateLights(elevator *config.Elevator, elevatorsMap map[string]config.Elevator) {
-
-	var lights [config.NumFloors][config.NumButtons - 1]bool
-
-	for _, id := range elevatorsMap {
-		for floor := range id.Requests {
-			for button := 0; button < 2; button++ {
-				if id.Requests[floor][button] {
-					lights[floor][button] = true
-				}
-			}
-		}
-
-	}
-	for floor := 0; floor < config.NumFloors; floor++ {
-		for button := 0; button < config.NumButtons-1; button++ {
-			elevio.SetButtonLamp(elevio.ButtonType(button), floor, lights[floor][button])
 		}
 	}
 }

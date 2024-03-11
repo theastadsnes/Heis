@@ -25,18 +25,18 @@ import (
  * @param numFloors Total number of floors in the building.
  */
 
-func Fsm(elevator *config.Elevator, buttons chan elevio.ButtonEvent, floors chan int, obstr chan bool, stop chan bool, doorTimer *time.Timer, numFloors int, orderChanRx chan *Assigner.AssignmentResults, orderChanTx chan *Assigner.AssignmentResults, stateRx chan *config.Elevator, stateTx chan *config.Elevator, elevatorsMap map[string]config.Elevator, motorFaultTimer *time.Timer, peerTxEnable chan bool, ackChanRx chan string, ackChanTx chan string) {
+func Fsm(elevator *config.Elevator, doorTimer *time.Timer, motorFaultTimer *time.Timer, numFloors int, elevatorsMap map[string]config.Elevator, hardware config.Hardwarechannels, network config.Networkchannels, peerTxEnable chan bool) {
 	Orderhandler.ClearLights()
 	//elevatorsMap := make(map[string]config.Elevator)
 
 	for {
 		select {
-		case stateReceived := <-stateRx:
+		case stateReceived := <-network.StateRx:
 
 			elevatorsMap[stateReceived.Id] = *stateReceived
-			statemachines.UpdateLights(elevator, elevatorsMap)
+			Orderhandler.UpdateLights(elevator, elevatorsMap)
 
-		case order := <-buttons:
+		case order := <-hardware.Drv_buttons:
 			//peerTxEnable <- true
 			if order.Button == 2 {
 				statemachines.CabOrderFSM(elevator, order.Floor, order.Button, doorTimer)
@@ -46,19 +46,19 @@ func Fsm(elevator *config.Elevator, buttons chan elevio.ButtonEvent, floors chan
 				elevatorsMapCopy[elevator.Id].Requests[order.Floor][order.Button] = true
 
 				if elevator.IsOnline {
-					Assigner.AssignHallOrders(orderChanTx, elevatorsMapCopy, ackChanRx)
+					Assigner.AssignHallOrders(network.OrderChanTx, elevatorsMapCopy, network.AckChanRx)
 				}
 
 			}
 
-		case newAssignedHallOrders := <-orderChanRx:
+		case newAssignedHallOrders := <-network.OrderChanRx:
 			// fmt.Println("ASSIGNING HALL ORDER")
 			// fmt.Println(newAssignedHallOrders)
-			ackChanTx <- elevator.Id
+			network.AckChanTx <- elevator.Id
 
 			statemachines.HallOrderFSM(elevator, newAssignedHallOrders, doorTimer, motorFaultTimer)
 
-		case floor := <-floors:
+		case floor := <-hardware.Drv_floors:
 			//peerTxEnable <- true
 			elevator.Floor = floor
 
@@ -100,7 +100,7 @@ func Fsm(elevator *config.Elevator, buttons chan elevio.ButtonEvent, floors chan
 				motorFaultTimer.Reset(time.Second * 4)
 			}
 
-		case obstruction := <-obstr:
+		case obstruction := <-hardware.Drv_obstr:
 			if obstruction {
 
 				if elevator.Behaviour == config.EB_DoorOpen {
@@ -141,36 +141,6 @@ func Fsm(elevator *config.Elevator, buttons chan elevio.ButtonEvent, floors chan
 				elevio.SetDoorOpenLamp(true)
 				elevator.Behaviour = config.EB_DoorOpen
 				doorTimer.Reset(time.Duration(3) * time.Second)
-			}
-
-		case a := <-stop:
-			if a {
-				elevio.SetMotorDirection(elevio.MD_Stop)
-				Orderhandler.ClearLights()
-				Orderhandler.ClearAllRequests(numFloors, elevator)
-				elevio.SetStopLamp(true)
-
-				if elevator.Behaviour != config.EB_Moving {
-					elevio.SetDoorOpenLamp(true)
-					elevator.Behaviour = config.EB_DoorOpen
-					doorTimer.Reset(time.Duration(3) * time.Second)
-				}
-
-				if elevator.Behaviour == config.EB_Moving {
-					time.Sleep(3 * time.Second)
-					elevio.SetDoorOpenLamp(false)
-					elevator.Behaviour = config.EB_Idle
-
-				}
-			} else {
-				Orderhandler.ClearLights()
-				Orderhandler.ClearRequestAtFloor(elevator, doorTimer)
-				elevio.SetStopLamp(false)
-
-				if elevator.Behaviour != config.EB_Moving {
-					doorTimer.Reset(time.Duration(3) * time.Second)
-				}
-
 			}
 
 		}

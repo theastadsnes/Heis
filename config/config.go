@@ -2,7 +2,8 @@ package config
 
 import (
 	"Heis/Driver/elevio"
-	"Heis/network/localip"
+	"Heis/Network/localip"
+	"Heis/Network/peers"
 	"flag"
 	"fmt"
 	"os"
@@ -28,6 +29,48 @@ type Elevator struct {
 	Requests  [][]bool
 	Behaviour ElevatorBehaviour
 	IsOnline  bool
+}
+
+type HRAElevState struct {
+	Behavior    string `json:"behaviour"`
+	Floor       int    `json:"floor"`
+	Direction   string `json:"direction"`
+	CabRequests []bool `json:"cabRequests"`
+}
+
+type HRAInput struct {
+	HallRequests [][2]bool               `json:"hallRequests"`
+	States       map[string]HRAElevState `json:"states"`
+}
+
+type HallRequestAssignment struct {
+	ID           string
+	UpRequests   []bool
+	DownRequests []bool
+}
+
+type AssignmentResults struct {
+	Assignments []HallRequestAssignment
+}
+
+type Hardwarechannels struct {
+	Drv_buttons chan elevio.ButtonEvent
+	Drv_floors  chan int
+	Drv_obstr   chan bool
+}
+
+type Networkchannels struct {
+	OrderChanRx chan *AssignmentResults
+	OrderChanTx chan *AssignmentResults
+	StateRx     chan *Elevator
+	StateTx     chan *Elevator
+	AckChanRx   chan string
+	AckChanTx   chan string
+}
+
+type Peerchannels struct {
+	PeerUpdateCh chan peers.PeerUpdate
+	PeerTxEnable chan bool
 }
 
 func InitElevState(id string) Elevator {

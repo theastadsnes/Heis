@@ -2,13 +2,13 @@ package watchdog
 
 import (
 	"Heis/Assigner"
+	"Heis/Network/peers"
 	"Heis/config"
-	"Heis/network/peers"
 	"fmt"
 	"time"
 )
 
-func WatchDogLostPeers(elevator *config.Elevator, peers chan peers.PeerUpdate, elevatorsMap map[string]config.Elevator, orderChanTx chan *Assigner.AssignmentResults, ackChanRx chan string) {
+func Watchdog(elevator *config.Elevator, peers chan peers.PeerUpdate, elevatorsMap map[string]config.Elevator, orderChanTx chan *config.AssignmentResults, ackChanRx chan string) {
 
 	var lostElevatorsStates map[string]config.Elevator = make(map[string]config.Elevator)
 
