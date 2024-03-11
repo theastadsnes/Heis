@@ -122,7 +122,7 @@ func Fsm(elevator *config.Elevator, doorTimer *time.Timer, motorFaultTimer *time
 			orderhandler.GoToValidFloor(elevator)
 
 			if !elevio.GetObstruction() {
-
+				fmt.Println("BEHAVIOUR", elevator.Behaviour)
 				peerTxEnable <- true
 				orderhandler.OpenDoor(elevator, doorTimer)
 
