@@ -73,7 +73,7 @@ func ClearLights() {
 
 	for f := 0; f < config.NumFloors; f++ {
 		for buttons := 0; buttons < config.NumButtons; buttons++ {
-			elevio.SetButtonLamp(buttons, f, false)
+			elevio.SetButtonLamp(elevio.ButtonType(buttons), f, false)
 		}
 	}
 }
