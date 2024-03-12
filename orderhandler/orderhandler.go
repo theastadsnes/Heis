@@ -32,7 +32,7 @@ func RequestsBelow(elevator *config.Elevator) bool {
 	return false
 }
 
-func RequestsCurrentFloor(elevator *config.Elevator) bool {
+func requestsCurrentFloor(elevator *config.Elevator) bool {
 	for b := 0; b < config.NumButtons; b++ {
 		if elevator.Requests[elevator.Floor][b] {
 			return true
@@ -43,7 +43,7 @@ func RequestsCurrentFloor(elevator *config.Elevator) bool {
 
 func ShouldStop(elevator *config.Elevator) bool {
 
-	if RequestsCurrentFloor(elevator) {
+	if requestsCurrentFloor(elevator) {
 
 		switch {
 		case elevator.Dirn == elevio.MD_Down:
@@ -78,7 +78,7 @@ func ClearLights() {
 	}
 }
 
-func ClearRequestAtFloor(elevator *config.Elevator) {
+func clearRequestAtFloor(elevator *config.Elevator) {
 	elevator.Requests[elevator.Floor][int(elevio.BT_Cab)] = false
 	elevio.SetButtonLamp(elevio.BT_Cab, elevator.Floor, false)
 
@@ -134,15 +134,6 @@ func RequestsChooseDirection(elevator *config.Elevator) {
 			elevator.Dirn = elevio.MD_Down
 		} else {
 			elevator.Dirn = elevio.MD_Stop
-		}
-	}
-}
-
-func ClearAllRequests(numFloors int, elevator *config.Elevator) {
-	for floor := 0; floor < config.NumFloors; floor++ {
-		for button := elevio.ButtonType(0); button < config.NumButtons; button++ {
-			elevator.Requests[floor][button] = false
-			elevio.SetButtonLamp(button, floor, false)
 		}
 	}
 }
@@ -221,7 +212,7 @@ func UpdateHallLights(elevator *config.Elevator, elevatorsMap map[string]config.
 
 func OpenDoor(elevator *config.Elevator, doorTimer *time.Timer) {
 	elevio.SetDoorOpenLamp(true)
-	ClearRequestAtFloor(elevator)
+	clearRequestAtFloor(elevator)
 	elevator.Behaviour = config.EB_DoorOpen
 	doorTimer.Reset(time.Duration(3) * time.Second)
 }
