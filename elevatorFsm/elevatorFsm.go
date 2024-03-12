@@ -26,10 +26,9 @@ func ElevatorFsm(elevator *config.Elevator, doorTimer *time.Timer, motorFaultTim
 				statemachines.CabOrderFSM(elevator, order.Floor, order.Button, doorTimer, motorFaultTimer)
 			} else {
 
-				elevatorsMapCopy := elevatorsMap
-				elevatorsMapCopy[elevator.Id].Requests[order.Floor][order.Button] = true
-
 				if elevator.IsOnline {
+					elevatorsMapCopy := elevatorsMap
+					elevatorsMapCopy[elevator.Id].Requests[order.Floor][order.Button] = true
 					assigner.AssignHallOrders(network.OrderChanTx, elevatorsMapCopy, network.AckChanRx)
 				}
 			}

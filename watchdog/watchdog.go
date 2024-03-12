@@ -2,8 +2,8 @@ package watchdog
 
 import (
 	"Heis/assigner"
-	"Heis/network/peers"
 	"Heis/config"
+	"Heis/network/peers"
 	"fmt"
 	"time"
 )
