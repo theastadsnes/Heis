@@ -3,10 +3,10 @@ package main
 import (
 	"Heis/config"
 	"Heis/driver/elevio"
-	"Heis/executer"
 	"Heis/network/bcast"
 	"Heis/network/peers"
 	"Heis/orderhandler"
+	"Heis/executer"
 	"Heis/watchdog"
 	"time"
 )
@@ -60,10 +60,10 @@ func main() {
 
 	go watchdog.SendElevatorStates(network.StateTx, &elevator)
 	go watchdog.Watchdog(&elevator, peerschannels.PeerUpdateCh, elevatorsMap, network.OrderChanTx, network.AckChanRx)
+	
+	go executer.ElevatorFSM(&elevator, doorTimer, motorFaultTimer, config.NumFloors, elevatorsMap, hardware, network, peerschannels.PeerTxEnable)
 
-	go executer.Fsm(&elevator, doorTimer, motorFaultTimer, config.NumFloors, elevatorsMap, hardware, network, peerschannels.PeerTxEnable)
-
-	orderhandler.ReadFromBackup(hardware.Drv_buttons)
+	orderhandler.ReadCabCallsFromBackup(hardware.Drv_buttons)
 
 	select {}
 

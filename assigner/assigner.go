@@ -81,7 +81,6 @@ func TransformElevatorStates(elevators map[string]config.Elevator) map[string]co
 }
 
 func PrepareHallRequests(elevators map[string]config.Elevator) [][2]bool {
-	//numFloors := 4
 	hallRequests := make([][2]bool, config.NumFloors)
 
 	for _, elev := range elevators {

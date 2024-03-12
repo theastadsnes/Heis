@@ -15,32 +15,20 @@ import (
 	"time"
 )
 
-/**
- * @brief Implements the finite state machine (FSM) logic for elevator control.
- * @param buttons Channel for receiving button events.
- * @param floors Channel for receiving floor events.
- * @param obstr Channel for receiving obstruction events.
- * @param stop Channel for receiving stop events.
- * @param doorTimer Pointer to the door timer.
- * @param numFloors Total number of floors in the building.
- */
-
-func Fsm(elevator *config.Elevator, doorTimer *time.Timer, motorFaultTimer *time.Timer, numFloors int, elevatorsMap map[string]config.Elevator, hardware config.Hardwarechannels, network config.Networkchannels, peerTxEnable chan bool) {
+func ElevatorFSM(elevator *config.Elevator, doorTimer *time.Timer, motorFaultTimer *time.Timer, numFloors int, elevatorsMap map[string]config.Elevator, hardware config.Hardwarechannels, network config.Networkchannels, peerTxEnable chan bool) {
 	orderhandler.ClearLights()
 
 	for {
 		select {
 		case stateReceived := <-network.StateRx:
-
 			elevatorsMap[stateReceived.Id] = *stateReceived
-			orderhandler.UpdateLights(elevator, elevatorsMap)
+			orderhandler.UpdateHallLights(elevator, elevatorsMap)
 
 		case order := <-hardware.Drv_buttons:
 
-			if order.Button == 2 {
+			if order.Button == elevio.BT_Cab {
 				statemachines.CabOrderFSM(elevator, order.Floor, order.Button, doorTimer, motorFaultTimer)
 			} else {
-
 				elevatorsMapCopy := elevatorsMap
 				elevatorsMapCopy[elevator.Id].Requests[order.Floor][order.Button] = true
 
@@ -51,15 +39,12 @@ func Fsm(elevator *config.Elevator, doorTimer *time.Timer, motorFaultTimer *time
 			}
 
 		case newAssignedHallOrders := <-network.OrderChanRx:
-
 			network.AckChanTx <- elevator.Id
-
 			statemachines.HallOrderFSM(elevator, newAssignedHallOrders, doorTimer, motorFaultTimer)
 
 		case floor := <-hardware.Drv_floors:
 
 			elevator.Floor = floor
-
 			elevio.SetFloorIndicator(floor)
 			motorFaultTimer.Reset(time.Second * 4)
 			fmt.Println(elevator.Dirn)
@@ -88,7 +73,6 @@ func Fsm(elevator *config.Elevator, doorTimer *time.Timer, motorFaultTimer *time
 						elevator.Behaviour = config.EB_Moving
 						motorFaultTimer.Reset(time.Second * 4)
 					}
-
 				}
 
 			} else {
@@ -118,18 +102,14 @@ func Fsm(elevator *config.Elevator, doorTimer *time.Timer, motorFaultTimer *time
 		case <-motorFaultTimer.C:
 			fmt.Println("MOTORFAULT", elevator.Floor)
 			peerTxEnable <- false
-
 			orderhandler.GoToValidFloor(elevator)
 
 			if !elevio.GetObstruction() {
-				fmt.Println("BEHAVIOUR", elevator.Behaviour)
 				peerTxEnable <- true
 				orderhandler.OpenDoor(elevator, doorTimer)
 
 			}
-
 		}
-
-		orderhandler.WriteToBackup(elevator)
+		orderhandler.WriteCabCallsToBackup(elevator)
 	}
 }

@@ -2,8 +2,8 @@ package watchdog
 
 import (
 	"Heis/assigner"
-	"Heis/network/peers"
 	"Heis/config"
+	"Heis/network/peers"
 	"fmt"
 	"time"
 )
@@ -11,7 +11,8 @@ import (
 func Watchdog(elevator *config.Elevator, peers chan peers.PeerUpdate, elevatorsMap map[string]config.Elevator, orderChanTx chan *config.AssignmentResults, ackChanRx chan string) {
 
 	var lostElevatorsStates map[string]config.Elevator = make(map[string]config.Elevator)
-
+	firstAvailablePeer := 0
+	
 	for {
 		select {
 		case peersUpdate := <-peers:
@@ -26,13 +27,14 @@ func Watchdog(elevator *config.Elevator, peers chan peers.PeerUpdate, elevatorsM
 					addToLostElevatorsMap(peersUpdate, elevatorsMap, lostElevatorsStates)
 					transferOrders(elevator, peersUpdate, lostElevatorsStates)
 
-					if contains(peersUpdate.Peers, elevator.Id) {
+					if elevatorInActivePeers(peersUpdate.Peers, elevator.Id) {
 						elevatorsMap[elevator.Id] = *elevator
 					}
-					lostElevatorsStates = make(map[string]config.Elevator)
-					if elevator.Id == peersUpdate.Peers[0] {
+					
+					if elevator.Id == peersUpdate.Peers[firstAvailablePeer] {
 						assigner.AssignHallOrders(orderChanTx, elevatorsMap, ackChanRx)
 					}
+					lostElevatorsStates = make(map[string]config.Elevator)
 				}
 			} else {
 				elevator.IsOnline = false
@@ -42,9 +44,9 @@ func Watchdog(elevator *config.Elevator, peers chan peers.PeerUpdate, elevatorsM
 	}
 }
 
-func contains(slice []string, val string) bool {
-	for _, item := range slice {
-		if item == val {
+func elevatorInActivePeers(activePeers []string, elevatorId string) bool {
+	for _, peerId := range activePeers {
+		if peerId == elevatorId {
 			return true
 		}
 	}
@@ -65,9 +67,7 @@ func transferOrders(elevator *config.Elevator, peersUpdate peers.PeerUpdate, los
 				if elevator.Id == peersUpdate.Peers[0] {
 					if lostElev.Requests[floor][button] {
 						elevator.Requests[floor][button] = true
-
 					}
-
 				}
 				for _, id := range peersUpdate.Lost {
 					if elevator.Id == id {

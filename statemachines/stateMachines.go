@@ -10,7 +10,6 @@ import (
 func CabOrderFSM(elevator *config.Elevator, orderFloor int, orderButton elevio.ButtonType, doorTimer *time.Timer, motorFaultTimer *time.Timer) {
 
 	elevio.SetButtonLamp(orderButton, orderFloor, true)
-
 	switch {
 	case elevator.Behaviour == config.EB_DoorOpen:
 		if orderFloor == elevator.Floor {
@@ -47,19 +46,14 @@ func updateHallOrders(elevator *config.Elevator, orderFloor *[config.NumFloors][
 				if assignments.UpRequests[floor] {
 					elevator.Requests[floor][elevio.BT_HallUp] = true
 					orderFloor[floor][elevio.BT_HallUp] = true
-
 				} else if !assignments.UpRequests[floor] {
 					elevator.Requests[floor][elevio.BT_HallUp] = false
-
 				}
-
 				if assignments.DownRequests[floor] {
 					elevator.Requests[floor][elevio.BT_HallDown] = true
 					orderFloor[floor][elevio.BT_HallDown] = true
-
 				} else if !assignments.DownRequests[floor] {
 					elevator.Requests[floor][elevio.BT_HallDown] = false
-
 				}
 			}
 		}
@@ -76,23 +70,17 @@ func HallOrderFSM(elevator *config.Elevator, newAssignedOrders *config.Assignmen
 			if orderFloor[floor][button] {
 				switch {
 				case elevator.Behaviour == config.EB_DoorOpen:
-
 					if floor == elevator.Floor {
 						orderhandler.OpenDoor(elevator, doorTimer)
-
 					}
-
 				case elevator.Behaviour == config.EB_Idle:
 					if floor == elevator.Floor {
 						orderhandler.OpenDoor(elevator, doorTimer)
-
 					} else {
 						if orderhandler.RequestsAbove(elevator) {
 							orderhandler.StartMotor(elevator, elevio.MD_Up, motorFaultTimer)
-
 						} else if orderhandler.RequestsBelow(elevator) {
 							orderhandler.StartMotor(elevator, elevio.MD_Down, motorFaultTimer)
-
 						}
 					}
 
