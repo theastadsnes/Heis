@@ -26,7 +26,7 @@ func Watchdog(elevator *config.Elevator, peers chan peers.PeerUpdate, elevatorsM
 					addToLostElevatorsMap(peersUpdate, elevatorsMap, lostElevatorsStates)
 					transferOrders(elevator, peersUpdate, lostElevatorsStates)
 
-					if contains(peersUpdate.Peers, elevator.Id) {
+					if elevatorInActivePeers(peersUpdate.Peers, elevator.Id) {
 						elevatorsMap[elevator.Id] = *elevator
 					}
 					lostElevatorsStates = make(map[string]config.Elevator)
@@ -42,9 +42,9 @@ func Watchdog(elevator *config.Elevator, peers chan peers.PeerUpdate, elevatorsM
 	}
 }
 
-func contains(slice []string, val string) bool {
-	for _, item := range slice {
-		if item == val {
+func elevatorInActivePeers(activePeers []string, elevatorId string) bool {
+	for _, id := range activePeers {
+		if id == elevatorId {
 			return true
 		}
 	}
@@ -59,15 +59,15 @@ func addToLostElevatorsMap(peersUpdate peers.PeerUpdate, elevatorsMap, lostEleva
 }
 
 func transferOrders(elevator *config.Elevator, peersUpdate peers.PeerUpdate, lostElevatorsStates map[string]config.Elevator) {
+	firstActivePeer := 0
+
 	for _, lostElev := range lostElevatorsStates {
 		for floor := 0; floor < config.NumFloors; floor++ {
 			for button := 0; button < 2; button++ {
-				if elevator.Id == peersUpdate.Peers[0] {
+				if elevator.Id == peersUpdate.Peers[firstActivePeer] {
 					if lostElev.Requests[floor][button] {
 						elevator.Requests[floor][button] = true
-
 					}
-
 				}
 				for _, id := range peersUpdate.Lost {
 					if elevator.Id == id {

@@ -55,7 +55,7 @@ func getExecutableName() string {
 
 func transformElevatorStates(elevators map[string]config.Elevator) map[string]config.HRAElevState {
 	states := make(map[string]config.HRAElevState)
-
+	
 	for id, elev := range elevators {
 		cabRequests := make([]bool, len(elev.Requests))
 		for floor := 0; floor < len(elev.Requests[0]); floor++ {

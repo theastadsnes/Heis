@@ -69,12 +69,13 @@ func ShouldStop(elevator *config.Elevator) bool {
 }
 
 func ClearLights() {
-	for f := 0; f < config.NumFloors; f++ {
-		elevio.SetButtonLamp(0, f, false)
-		elevio.SetButtonLamp(1, f, false)
-		elevio.SetButtonLamp(2, f, false)
-	}
 	elevio.SetDoorOpenLamp(false)
+
+	for f := 0; f < config.NumFloors; f++ {
+		for buttons := 0; buttons < config.NumButtons; buttons++ {
+			elevio.SetButtonLamp(buttons, f, false)
+		}
+	}
 }
 
 func ClearRequestAtFloor(elevator *config.Elevator) {
@@ -151,7 +152,7 @@ func HasRequests(elevator *config.Elevator) bool {
 
 }
 
-func WriteToBackup(elevator *config.Elevator) {
+func WriteCabCallsToBackup(elevator *config.Elevator) {
 	filename := "orderhandler/cabOrder.txt"
 	f, err := os.Create(filename)
 	if err != nil {
@@ -173,7 +174,7 @@ func WriteToBackup(elevator *config.Elevator) {
 	defer f.Close()
 }
 
-func ReadFromBackup(buttons chan elevio.ButtonEvent) {
+func ReadCabCallsFromBackup(buttons chan elevio.ButtonEvent) {
 	filename := "orderhandler/cabOrder.txt"
 	f, err := os.ReadFile(filename)
 	if err != nil {
@@ -197,7 +198,7 @@ func ReadFromBackup(buttons chan elevio.ButtonEvent) {
 	}
 }
 
-func UpdateLights(elevator *config.Elevator, elevatorsMap map[string]config.Elevator) {
+func UpdateHallLights(elevator *config.Elevator, elevatorsMap map[string]config.Elevator) {
 
 	var lights [config.NumFloors][config.NumButtons - 1]bool
 

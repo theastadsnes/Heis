@@ -1,4 +1,4 @@
-package executer
+package elevatorFsm
 
 import (
 	"Heis/assigner"
@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func Fsm(elevator *config.Elevator, doorTimer *time.Timer, motorFaultTimer *time.Timer, numFloors int, elevatorsMap map[string]config.Elevator, hardware config.Hardwarechannels, network config.Networkchannels, peerTxEnable chan bool) {
+func ElevatorFsm(elevator *config.Elevator, doorTimer *time.Timer, motorFaultTimer *time.Timer, numFloors int, elevatorsMap map[string]config.Elevator, hardware config.Hardwarechannels, network config.Networkchannels, peerTxEnable chan bool) {
 	orderhandler.ClearLights()
 
 	for {
@@ -18,11 +18,11 @@ func Fsm(elevator *config.Elevator, doorTimer *time.Timer, motorFaultTimer *time
 		case stateReceived := <-network.StateRx:
 
 			elevatorsMap[stateReceived.Id] = *stateReceived
-			orderhandler.UpdateLights(elevator, elevatorsMap)
+			orderhandler.UpdateHallLights(elevator, elevatorsMap)
 
 		case order := <-hardware.Drv_buttons:
 
-			if order.Button == 2 {
+			if order.Button == elevio.BT_Cab {
 				statemachines.CabOrderFSM(elevator, order.Floor, order.Button, doorTimer, motorFaultTimer)
 			} else {
 
@@ -32,19 +32,14 @@ func Fsm(elevator *config.Elevator, doorTimer *time.Timer, motorFaultTimer *time
 				if elevator.IsOnline {
 					assigner.AssignHallOrders(network.OrderChanTx, elevatorsMapCopy, network.AckChanRx)
 				}
-
 			}
 
 		case newAssignedHallOrders := <-network.OrderChanRx:
-			
 			network.AckChanTx <- elevator.Id
-
 			statemachines.HallOrderFSM(elevator, newAssignedHallOrders, doorTimer, motorFaultTimer)
 
 		case floor := <-hardware.Drv_floors:
-
 			elevator.Floor = floor
-
 			elevio.SetFloorIndicator(floor)
 			motorFaultTimer.Reset(time.Second * 4)
 			fmt.Println(elevator.Dirn)
@@ -105,6 +100,7 @@ func Fsm(elevator *config.Elevator, doorTimer *time.Timer, motorFaultTimer *time
 			peerTxEnable <- false
 
 			orderhandler.GoToValidFloor(elevator)
+
 			time.AfterFunc(time.Second*2, func() {
 				if !elevio.GetObstruction() {
 					peerTxEnable <- true
@@ -114,6 +110,6 @@ func Fsm(elevator *config.Elevator, doorTimer *time.Timer, motorFaultTimer *time
 
 		}
 
-		orderhandler.WriteToBackup(elevator)
+		orderhandler.WriteCabCallsToBackup(elevator)
 	}
 }
