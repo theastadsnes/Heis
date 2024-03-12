@@ -4,21 +4,21 @@ import (
 	"Heis/assigner"
 	"Heis/config"
 	"Heis/driver/elevio"
-	"Heis/orderhandler"
+	"Heis/elevatorhelper"
 	"Heis/statemachines"
 	"fmt"
 	"time"
 )
 
 func ElevatorFsm(elevator *config.Elevator, doorTimer *time.Timer, motorFaultTimer *time.Timer, numFloors int, elevatorsMap map[string]config.Elevator, hardware config.Hardwarechannels, network config.Networkchannels, peerTxEnable chan bool) {
-	orderhandler.ClearLights()
+	elevatorhelper.ClearLights()
 
 	for {
 		select {
 		case stateReceived := <-network.StateRx:
 
 			elevatorsMap[stateReceived.Id] = *stateReceived
-			orderhandler.UpdateHallLights(elevator, elevatorsMap)
+			elevatorhelper.UpdateHallLights(elevator, elevatorsMap)
 
 		case order := <-hardware.Drv_buttons:
 
@@ -48,9 +48,9 @@ func ElevatorFsm(elevator *config.Elevator, doorTimer *time.Timer, motorFaultTim
 				motorFaultTimer.Stop()
 			}
 
-			if orderhandler.ShouldStop(elevator) {
+			if elevatorhelper.ShouldStop(elevator) {
 				elevio.SetMotorDirection(elevio.MD_Stop)
-				orderhandler.OpenDoor(elevator, doorTimer)
+				elevatorhelper.OpenDoor(elevator, doorTimer)
 				motorFaultTimer.Stop()
 			}
 
@@ -60,7 +60,7 @@ func ElevatorFsm(elevator *config.Elevator, doorTimer *time.Timer, motorFaultTim
 				elevio.SetDoorOpenLamp(false)
 				switch {
 				case elevator.Behaviour == config.EB_DoorOpen:
-					orderhandler.RequestsChooseDirection(elevator)
+					elevatorhelper.RequestsChooseDirection(elevator)
 					elevio.SetMotorDirection(elevator.Dirn)
 					if elevator.Dirn == elevio.MD_Stop {
 						elevator.Behaviour = config.EB_Idle
@@ -99,17 +99,17 @@ func ElevatorFsm(elevator *config.Elevator, doorTimer *time.Timer, motorFaultTim
 			fmt.Println("MOTORFAULT", elevator.Floor)
 			peerTxEnable <- false
 
-			orderhandler.GoToValidFloor(elevator)
+			elevatorhelper.GoToValidFloor(elevator)
 
 			time.AfterFunc(time.Second*2, func() {
 				if !elevio.GetObstruction() {
 					peerTxEnable <- true
-					orderhandler.OpenDoor(elevator, doorTimer)
+					elevatorhelper.OpenDoor(elevator, doorTimer)
 				}
 			})
 
 		}
 
-		orderhandler.WriteCabCallsToBackup(elevator)
+		elevatorhelper.WriteCabCallsToBackup(elevator)
 	}
 }

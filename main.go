@@ -4,9 +4,9 @@ import (
 	"Heis/config"
 	"Heis/driver/elevio"
 	"Heis/elevatorFsm"
+	"Heis/elevatorhelper"
 	"Heis/network/bcast"
 	"Heis/network/peers"
-	"Heis/orderhandler"
 	"Heis/watchdog"
 	"time"
 )
@@ -63,7 +63,7 @@ func main() {
 
 	go elevatorFsm.ElevatorFsm(&elevator, doorTimer, motorFaultTimer, config.NumFloors, elevatorsMap, hardware, network, peerschannels.PeerTxEnable)
 
-	orderhandler.ReadCabCallsFromBackup(hardware.Drv_buttons)
+	elevatorhelper.ReadCabCallsFromBackup(hardware.Drv_buttons)
 
 	select {}
 

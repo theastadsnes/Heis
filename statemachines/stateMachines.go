@@ -3,7 +3,7 @@ package statemachines
 import (
 	"Heis/config"
 	"Heis/driver/elevio"
-	"Heis/orderhandler"
+	"Heis/elevatorhelper"
 	"time"
 )
 
@@ -14,7 +14,7 @@ func CabOrderFSM(elevator *config.Elevator, orderFloor int, orderButton elevio.B
 	switch {
 	case elevator.Behaviour == config.EB_DoorOpen:
 		if orderFloor == elevator.Floor {
-			orderhandler.OpenDoor(elevator, doorTimer)
+			elevatorhelper.OpenDoor(elevator, doorTimer)
 
 		} else {
 			elevator.Requests[orderFloor][orderButton] = true
@@ -24,15 +24,15 @@ func CabOrderFSM(elevator *config.Elevator, orderFloor int, orderButton elevio.B
 
 	case elevator.Behaviour == config.EB_Idle:
 		if orderFloor == elevator.Floor {
-			orderhandler.OpenDoor(elevator, doorTimer)
+			elevatorhelper.OpenDoor(elevator, doorTimer)
 
 		} else {
 			elevator.Requests[orderFloor][orderButton] = true
-			if orderhandler.RequestsAbove(elevator) {
-				orderhandler.StartMotor(elevator, elevio.MD_Up, motorFaultTimer)
+			if elevatorhelper.RequestsAbove(elevator) {
+				elevatorhelper.StartMotor(elevator, elevio.MD_Up, motorFaultTimer)
 
-			} else if orderhandler.RequestsBelow(elevator) {
-				orderhandler.StartMotor(elevator, elevio.MD_Down, motorFaultTimer)
+			} else if elevatorhelper.RequestsBelow(elevator) {
+				elevatorhelper.StartMotor(elevator, elevio.MD_Down, motorFaultTimer)
 
 			}
 		}
@@ -70,8 +70,8 @@ func HallOrderFSM(elevator *config.Elevator, newAssignedOrders *config.Assignmen
 
 	var orderFloor [config.NumFloors][config.NumButtons - 1]bool
 	updateHallOrders(elevator, &orderFloor, newAssignedOrders)
-	if !orderhandler.HasRequests(elevator) {
-		orderhandler.GoToValidFloor(elevator)
+	if !elevatorhelper.HasRequests(elevator) {
+		elevatorhelper.GoToValidFloor(elevator)
 	}
 	for floor := 0; floor < config.NumFloors; floor++ {
 		for button := 0; button < config.NumButtons-1; button++ {
@@ -80,20 +80,20 @@ func HallOrderFSM(elevator *config.Elevator, newAssignedOrders *config.Assignmen
 				case elevator.Behaviour == config.EB_DoorOpen:
 
 					if floor == elevator.Floor {
-						orderhandler.OpenDoor(elevator, doorTimer)
+						elevatorhelper.OpenDoor(elevator, doorTimer)
 
 					}
 
 				case elevator.Behaviour == config.EB_Idle:
 					if floor == elevator.Floor {
-						orderhandler.OpenDoor(elevator, doorTimer)
+						elevatorhelper.OpenDoor(elevator, doorTimer)
 
 					} else {
-						if orderhandler.RequestsAbove(elevator) {
-							orderhandler.StartMotor(elevator, elevio.MD_Up, motorFaultTimer)
+						if elevatorhelper.RequestsAbove(elevator) {
+							elevatorhelper.StartMotor(elevator, elevio.MD_Up, motorFaultTimer)
 
-						} else if orderhandler.RequestsBelow(elevator) {
-							orderhandler.StartMotor(elevator, elevio.MD_Down, motorFaultTimer)
+						} else if elevatorhelper.RequestsBelow(elevator) {
+							elevatorhelper.StartMotor(elevator, elevio.MD_Down, motorFaultTimer)
 
 						}
 					}
