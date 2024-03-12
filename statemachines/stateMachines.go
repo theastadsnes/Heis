@@ -70,7 +70,9 @@ func HallOrderFSM(elevator *config.Elevator, newAssignedOrders *config.Assignmen
 
 	var orderFloor [config.NumFloors][config.NumButtons - 1]bool
 	updateHallOrders(elevator, &orderFloor, newAssignedOrders)
-
+	if !orderhandler.HasRequests(elevator) {
+		orderhandler.GoToValidFloor(elevator)
+	}
 	for floor := 0; floor < config.NumFloors; floor++ {
 		for button := 0; button < config.NumButtons-1; button++ {
 			if orderFloor[floor][button] {

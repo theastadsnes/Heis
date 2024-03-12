@@ -1,8 +1,3 @@
-/**
- * @file fsm.go
- * @brief Contains the finite state machine (FSM) logic for elevator control.
- */
-
 package executer
 
 import (
@@ -14,16 +9,6 @@ import (
 	"fmt"
 	"time"
 )
-
-/**
- * @brief Implements the finite state machine (FSM) logic for elevator control.
- * @param buttons Channel for receiving button events.
- * @param floors Channel for receiving floor events.
- * @param obstr Channel for receiving obstruction events.
- * @param stop Channel for receiving stop events.
- * @param doorTimer Pointer to the door timer.
- * @param numFloors Total number of floors in the building.
- */
 
 func Fsm(elevator *config.Elevator, doorTimer *time.Timer, motorFaultTimer *time.Timer, numFloors int, elevatorsMap map[string]config.Elevator, hardware config.Hardwarechannels, network config.Networkchannels, peerTxEnable chan bool) {
 	orderhandler.ClearLights()
@@ -51,7 +36,7 @@ func Fsm(elevator *config.Elevator, doorTimer *time.Timer, motorFaultTimer *time
 			}
 
 		case newAssignedHallOrders := <-network.OrderChanRx:
-
+			
 			network.AckChanTx <- elevator.Id
 
 			statemachines.HallOrderFSM(elevator, newAssignedHallOrders, doorTimer, motorFaultTimer)
@@ -120,13 +105,12 @@ func Fsm(elevator *config.Elevator, doorTimer *time.Timer, motorFaultTimer *time
 			peerTxEnable <- false
 
 			orderhandler.GoToValidFloor(elevator)
-
-			if !elevio.GetObstruction() {
-				fmt.Println("BEHAVIOUR", elevator.Behaviour)
-				peerTxEnable <- true
-				orderhandler.OpenDoor(elevator, doorTimer)
-
-			}
+			time.AfterFunc(time.Second*2, func() {
+				if !elevio.GetObstruction() {
+					peerTxEnable <- true
+					orderhandler.OpenDoor(elevator, doorTimer)
+				}
+			})
 
 		}
 
