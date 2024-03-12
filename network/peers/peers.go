@@ -52,7 +52,6 @@ func Receiver(port int, peerUpdateCh chan<- PeerUpdate) {
 
 		id := string(buf[:n])
 
-		// Adding new connection
 		p.New = ""
 		if id != "" {
 			if _, idExists := lastSeen[id]; !idExists {
@@ -63,7 +62,6 @@ func Receiver(port int, peerUpdateCh chan<- PeerUpdate) {
 			lastSeen[id] = time.Now()
 		}
 
-		// Removing dead connection
 		p.Lost = make([]string, 0)
 		for k, v := range lastSeen {
 			if time.Now().Sub(v) > timeout {
@@ -73,7 +71,6 @@ func Receiver(port int, peerUpdateCh chan<- PeerUpdate) {
 			}
 		}
 
-		// Sending update
 		if updated {
 			p.Peers = make([]string, 0, len(lastSeen))
 

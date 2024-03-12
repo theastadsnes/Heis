@@ -13,6 +13,7 @@ import (
 func AssignHallOrders(orderChanTx chan *config.AssignmentResults, ElevatorsMap map[string]config.Elevator, ackChanRx chan string) {
 	newOrders := getRequestStruct(ElevatorsMap)
 	go waitForAllACKs(orderChanTx, ElevatorsMap, ackChanRx, newOrders)
+
 }
 
 func costfunc(hallRequests [][2]bool, states map[string]config.HRAElevState) (map[string][][2]bool, error) {
@@ -74,7 +75,9 @@ func transformElevatorStates(elevators map[string]config.Elevator) map[string]co
 	return states
 }
 
+
 func prepareHallRequests(elevators map[string]config.Elevator) [][2]bool {
+
 	hallRequests := make([][2]bool, config.NumFloors)
 
 	for _, elev := range elevators {
@@ -168,8 +171,10 @@ func waitForAllACKs(orderChanTx chan *config.AssignmentResults, ElevatorsMap map
 				}
 				if allAcked {
 					return
+
 				}
 			}
+			
 		case <-time.After(500 * time.Millisecond):
 			fmt.Println("Timeout: Not all acknowledgments received")
 			return
@@ -181,6 +186,7 @@ func drainAckChannel(ackChanRx chan string) {
 	for {
 		select {
 		case <-ackChanRx:
+
 		default:
 			return
 		}
