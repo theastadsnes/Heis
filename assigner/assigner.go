@@ -13,7 +13,6 @@ import (
 func AssignHallOrders(orderChanTx chan *config.AssignmentResults, ElevatorsMap map[string]config.Elevator, ackChanRx chan string) {
 
 	transStates := TransformElevatorStates(ElevatorsMap)
-	fmt.Println("-----Transformed states-----", transStates)
 	hallRequests := PrepareHallRequests(ElevatorsMap)
 	newOrders := GetRequestStruct(hallRequests, transStates)
 
@@ -81,7 +80,6 @@ func TransformElevatorStates(elevators map[string]config.Elevator) map[string]co
 }
 
 func PrepareHallRequests(elevators map[string]config.Elevator) [][2]bool {
-	//numFloors := 4
 	hallRequests := make([][2]bool, config.NumFloors)
 
 	for _, elev := range elevators {
@@ -171,9 +169,10 @@ func WaitForAllACKs(orderChanTx chan *config.AssignmentResults, ElevatorsMap map
 					}
 				}
 				if allAcked {
-					return // Stop broadcasting if all ACKs received
+					return 
 				}
 			}
+			
 		case <-time.After(500 * time.Millisecond):
 			fmt.Println("Timeout: Not all acknowledgments received")
 			return
@@ -185,9 +184,8 @@ func drainAckChannel(ackChanRx chan string) {
 	for {
 		select {
 		case <-ackChanRx:
-			// An ACK was read from the channel, continue draining.
+
 		default:
-			// No more ACKs to read, the channel is now drained.
 			return
 		}
 	}

@@ -10,10 +10,10 @@ import (
 	"time"
 )
 
-func RequestsAbove(e *config.Elevator) bool {
-	for f := e.Floor + 1; f < config.NumFloors; f++ {
+func RequestsAbove(elevator *config.Elevator) bool {
+	for f := elevator.Floor + 1; f < config.NumFloors; f++ {
 		for b := 0; b < config.NumButtons; b++ {
-			if e.Requests[f][b] {
+			if elevator.Requests[f][b] {
 				return true
 			}
 		}
@@ -21,10 +21,10 @@ func RequestsAbove(e *config.Elevator) bool {
 	return false
 }
 
-func RequestsBelow(e *config.Elevator) bool {
-	for f := e.Floor - 1; f >= 0; f-- {
+func RequestsBelow(elevator *config.Elevator) bool {
+	for f := elevator.Floor - 1; f >= 0; f-- {
 		for b := 0; b < config.NumButtons; b++ {
-			if e.Requests[f][b] {
+			if elevator.Requests[f][b] {
 				return true
 			}
 		}
@@ -32,31 +32,31 @@ func RequestsBelow(e *config.Elevator) bool {
 	return false
 }
 
-func RequestsCurrentFloor(e *config.Elevator) bool {
+func RequestsCurrentFloor(elevator *config.Elevator) bool {
 	for b := 0; b < config.NumButtons; b++ {
-		if e.Requests[e.Floor][b] {
+		if elevator.Requests[elevator.Floor][b] {
 			return true
 		}
 	}
 	return false
 }
 
-func ShouldStop(e *config.Elevator) bool {
+func ShouldStop(elevator *config.Elevator) bool {
 
-	if RequestsCurrentFloor(e) {
+	if RequestsCurrentFloor(elevator) {
 
 		switch {
-		case e.Dirn == elevio.MD_Down:
-			if e.Requests[e.Floor][elevio.BT_HallUp] && RequestsBelow(e) {
-				if e.Requests[e.Floor][elevio.BT_HallDown] {
+		case elevator.Dirn == elevio.MD_Down:
+			if elevator.Requests[elevator.Floor][elevio.BT_HallUp] && RequestsBelow(elevator) {
+				if elevator.Requests[elevator.Floor][elevio.BT_HallDown] {
 					return true
 				} else {
 					return false
 				}
 			}
-		case e.Dirn == elevio.MD_Up:
-			if e.Requests[e.Floor][elevio.BT_HallDown] && RequestsAbove(e) {
-				if e.Requests[e.Floor][elevio.BT_HallUp] {
+		case elevator.Dirn == elevio.MD_Up:
+			if elevator.Requests[elevator.Floor][elevio.BT_HallDown] && RequestsAbove(elevator) {
+				if elevator.Requests[elevator.Floor][elevio.BT_HallUp] {
 					return true
 				} else {
 					return false
@@ -75,74 +75,72 @@ func ClearLights() {
 		elevio.SetButtonLamp(2, f, false)
 	}
 	elevio.SetDoorOpenLamp(false)
-
 }
 
-func ClearRequestAtFloor(e *config.Elevator) {
-	e.Requests[e.Floor][int(elevio.BT_Cab)] = false
-	elevio.SetButtonLamp(elevio.BT_Cab, e.Floor, false)
+func ClearRequestAtFloor(elevator *config.Elevator) {
+	elevator.Requests[elevator.Floor][int(elevio.BT_Cab)] = false
+	elevio.SetButtonLamp(elevio.BT_Cab, elevator.Floor, false)
 
 	switch {
-	case e.Dirn == elevio.MD_Up:
-		e.Requests[e.Floor][int(elevio.BT_HallUp)] = false
-		elevio.SetButtonLamp(elevio.BT_HallUp, e.Floor, false)
-		if !RequestsAbove(e) {
-			e.Requests[e.Floor][int(elevio.BT_HallDown)] = false
-			elevio.SetButtonLamp(elevio.BT_HallDown, e.Floor, false)
+	case elevator.Dirn == elevio.MD_Up:
+		elevator.Requests[elevator.Floor][int(elevio.BT_HallUp)] = false
+		elevio.SetButtonLamp(elevio.BT_HallUp, elevator.Floor, false)
+		if !RequestsAbove(elevator) {
+			elevator.Requests[elevator.Floor][int(elevio.BT_HallDown)] = false
+			elevio.SetButtonLamp(elevio.BT_HallDown, elevator.Floor, false)
 		}
 
-	case e.Dirn == elevio.MD_Down:
+	case elevator.Dirn == elevio.MD_Down:
 
-		e.Requests[e.Floor][int(elevio.BT_HallDown)] = false
-		elevio.SetButtonLamp(elevio.BT_HallDown, e.Floor, false)
-		if !RequestsBelow(e) {
-			e.Requests[e.Floor][int(elevio.BT_HallUp)] = false
-			elevio.SetButtonLamp(elevio.BT_HallUp, e.Floor, false)
+		elevator.Requests[elevator.Floor][int(elevio.BT_HallDown)] = false
+		elevio.SetButtonLamp(elevio.BT_HallDown, elevator.Floor, false)
+		if !RequestsBelow(elevator) {
+			elevator.Requests[elevator.Floor][int(elevio.BT_HallUp)] = false
+			elevio.SetButtonLamp(elevio.BT_HallUp, elevator.Floor, false)
 		}
 
-	case e.Dirn == elevio.MD_Stop:
-		e.Requests[e.Floor][int(elevio.BT_HallDown)] = false
-		e.Requests[e.Floor][int(elevio.BT_HallUp)] = false
-		elevio.SetButtonLamp(elevio.BT_HallUp, e.Floor, false)
-		elevio.SetButtonLamp(elevio.BT_HallDown, e.Floor, false)
+	case elevator.Dirn == elevio.MD_Stop:
+		elevator.Requests[elevator.Floor][int(elevio.BT_HallDown)] = false
+		elevator.Requests[elevator.Floor][int(elevio.BT_HallUp)] = false
+		elevio.SetButtonLamp(elevio.BT_HallUp, elevator.Floor, false)
+		elevio.SetButtonLamp(elevio.BT_HallDown, elevator.Floor, false)
 	}
-
 }
 
-func RequestsChooseDirection(e *config.Elevator) {
+func RequestsChooseDirection(elevator *config.Elevator) {
 
-	switch e.Dirn {
+	switch elevator.Dirn {
 	case elevio.MD_Up:
-		if RequestsAbove(e) {
-			e.Dirn = elevio.MD_Up
-		} else if RequestsBelow(e) {
-			e.Dirn = elevio.MD_Down
+		if RequestsAbove(elevator) {
+			elevator.Dirn = elevio.MD_Up
+		} else if RequestsBelow(elevator) {
+			elevator.Dirn = elevio.MD_Down
 		} else {
-			e.Dirn = elevio.MD_Stop
+			elevator.Dirn = elevio.MD_Stop
 		}
 	case elevio.MD_Down:
-		if RequestsBelow(e) {
-			e.Dirn = elevio.MD_Down
-		} else if RequestsAbove(e) {
-			e.Dirn = elevio.MD_Up
+		if RequestsBelow(elevator) {
+			elevator.Dirn = elevio.MD_Down
+		} else if RequestsAbove(elevator) {
+			elevator.Dirn = elevio.MD_Up
 		} else {
-			e.Dirn = elevio.MD_Stop
+			elevator.Dirn = elevio.MD_Stop
 		}
 	case elevio.MD_Stop:
-		if RequestsAbove(e) {
-			e.Dirn = elevio.MD_Up
-		} else if RequestsBelow(e) {
-			e.Dirn = elevio.MD_Down
+		if RequestsAbove(elevator) {
+			elevator.Dirn = elevio.MD_Up
+		} else if RequestsBelow(elevator) {
+			elevator.Dirn = elevio.MD_Down
 		} else {
-			e.Dirn = elevio.MD_Stop
+			elevator.Dirn = elevio.MD_Stop
 		}
 	}
 }
 
-func ClearAllRequests(numFloors int, e *config.Elevator) {
+func ClearAllRequests(numFloors int, elevator *config.Elevator) {
 	for floor := 0; floor < config.NumFloors; floor++ {
 		for button := elevio.ButtonType(0); button < config.NumButtons; button++ {
-			e.Requests[floor][button] = false
+			elevator.Requests[floor][button] = false
 			elevio.SetButtonLamp(button, floor, false)
 		}
 	}

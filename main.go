@@ -40,7 +40,7 @@ func main() {
 		PeerTxEnable: make(chan bool, 100),
 	}
 
-	//Creating timers
+	// Creating timers
 	doorTimer := time.NewTimer(time.Duration(3) * time.Second)
 	motorFaultTimer := time.NewTimer(time.Second * 4)
 

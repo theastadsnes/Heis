@@ -40,11 +40,6 @@ type ButtonEvent struct {
 	Button ButtonType
 }
 
-/**
- * @brief Initializes the elevator I/O connection.
- * @param addr The address of the elevator server.
- * @param numFloors The total number of floors in the building.
- */
 func Init(addr string, numFloors int) {
 	if _initialized {
 		fmt.Println("Driver already initialized!")
@@ -60,52 +55,26 @@ func Init(addr string, numFloors int) {
 	_initialized = true
 }
 
-/**
- * @brief Sets the direction of the elevator motor.
- * @param dir The direction of the motor (up, down, or stop).
- */
 func SetMotorDirection(dir MotorDirection) {
 	write([4]byte{1, byte(dir), 0, 0})
 }
 
-/**
- * @brief Sets the lamp status for a button.
- * @param button The type of button (hall up, hall down, or cab).
- * @param floor The floor where the button is located.
- * @param value The status of the lamp (on or off).
- */
 func SetButtonLamp(button ButtonType, floor int, value bool) {
 	write([4]byte{2, byte(button), byte(floor), toByte(value)})
 }
 
-/**
- * @brief Sets the floor indicator.
- * @param floor The floor to be indicated.
- */
 func SetFloorIndicator(floor int) {
 	write([4]byte{3, byte(floor), 0, 0})
 }
 
-/**
- * @brief Sets the status of the door open lamp.
- * @param value The status of the door open lamp (on or off).
- */
 func SetDoorOpenLamp(value bool) {
 	write([4]byte{4, toByte(value), 0, 0})
 }
 
-/**
- * @brief Sets the status of the stop button lamp.
- * @param value The status of the stop button lamp (on or off).
- */
 func SetStopLamp(value bool) {
 	write([4]byte{5, toByte(value), 0, 0})
 }
 
-/**
- * @brief Polls for button events and sends them to a channel.
- * @param receiver The channel to send button events to.
- */
 func PollButtons(receiver chan<- ButtonEvent) {
 	prev := make([][3]bool, _numFloors)
 	for {
@@ -122,11 +91,6 @@ func PollButtons(receiver chan<- ButtonEvent) {
 	}
 }
 
-/**
- * @brief Polls for floor events and sends them to a channel.
- * @param receiver The channel to send floor events to.
- * @return The current floor.
- */
 func PollFloorSensor(receiver chan<- int) int {
 	prev := -1
 	for {
@@ -139,10 +103,6 @@ func PollFloorSensor(receiver chan<- int) int {
 	}
 }
 
-/**
- * @brief Polls for stop button events and sends them to a channel.
- * @param receiver The channel to send stop button events to.
- */
 func PollStopButton(receiver chan<- bool) {
 	prev := false
 	for {
@@ -155,10 +115,6 @@ func PollStopButton(receiver chan<- bool) {
 	}
 }
 
-/**
- * @brief Polls for obstruction switch events and sends them to a channel.
- * @param receiver The channel to send obstruction switch events to.
- */
 func PollObstructionSwitch(receiver chan<- bool) {
 	prev := false
 	for {
@@ -171,21 +127,11 @@ func PollObstructionSwitch(receiver chan<- bool) {
 	}
 }
 
-/**
- * @brief Reads the status of a button.
- * @param button The type of button (hall up, hall down, or cab).
- * @param floor The floor where the button is located.
- * @return The status of the button.
- */
 func GetButton(button ButtonType, floor int) bool {
 	a := read([4]byte{6, byte(button), byte(floor), 0})
 	return toBool(a[1])
 }
 
-/**
- * @brief Reads the current floor.
- * @return The current floor or -1 if no floor is detected.
- */
 func GetFloor() int {
 	a := read([4]byte{7, 0, 0, 0})
 	if a[1] != 0 {
@@ -195,29 +141,16 @@ func GetFloor() int {
 	}
 }
 
-/**
- * @brief Reads the status of the stop button.
- * @return The status of the stop button.
- */
 func GetStop() bool {
 	a := read([4]byte{8, 0, 0, 0})
 	return toBool(a[1])
 }
 
-/**
- * @brief Reads the status of the obstruction switch.
- * @return The status of the obstruction switch.
- */
 func GetObstruction() bool {
 	a := read([4]byte{9, 0, 0, 0})
 	return toBool(a[1])
 }
 
-/**
- * @brief Reads data from the elevator server.
- * @param in The input data to send.
- * @return The response from the elevator server.
- */
 func read(in [4]byte) [4]byte {
 	_mtx.Lock()
 	defer _mtx.Unlock()
@@ -236,10 +169,6 @@ func read(in [4]byte) [4]byte {
 	return out
 }
 
-/**
- * @brief Writes data to the elevator server.
- * @param in The data to send.
- */
 func write(in [4]byte) {
 	_mtx.Lock()
 	defer _mtx.Unlock()
@@ -250,11 +179,6 @@ func write(in [4]byte) {
 	}
 }
 
-/**
- * @brief Converts a boolean value to a byte (0 or 1).
- * @param a The boolean value to convert.
- * @return The byte representation of the boolean value.
- */
 func toByte(a bool) byte {
 	var b byte = 0
 	if a {
@@ -263,11 +187,6 @@ func toByte(a bool) byte {
 	return b
 }
 
-/**
- * @brief Converts a byte (0 or 1) to a boolean value.
- * @param a The byte to convert.
- * @return The boolean value.
- */
 func toBool(a byte) bool {
 	var b bool = false
 	if a != 0 {
@@ -276,10 +195,6 @@ func toBool(a byte) bool {
 	return b
 }
 
-/**
- * @brief Pauses execution for a specified duration.
- * @param duration The duration to sleep.
- */
 func Set_timer(duration time.Duration) {
 	time.Sleep(duration * time.Second)
 }
