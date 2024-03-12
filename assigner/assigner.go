@@ -11,16 +11,12 @@ import (
 )
 
 func AssignHallOrders(orderChanTx chan *config.AssignmentResults, ElevatorsMap map[string]config.Elevator, ackChanRx chan string) {
-
-	transStates := TransformElevatorStates(ElevatorsMap)
-	hallRequests := PrepareHallRequests(ElevatorsMap)
-	newOrders := GetRequestStruct(hallRequests, transStates)
-
-	go WaitForAllACKs(orderChanTx, ElevatorsMap, ackChanRx, newOrders)
+	newOrders := getRequestStruct(ElevatorsMap)
+	go waitForAllACKs(orderChanTx, ElevatorsMap, ackChanRx, newOrders)
 
 }
 
-func Costfunc(hallRequests [][2]bool, states map[string]config.HRAElevState) (map[string][][2]bool, error) {
+func costfunc(hallRequests [][2]bool, states map[string]config.HRAElevState) (map[string][][2]bool, error) {
 	hraExecutable := getExecutableName()
 
 	input := config.HRAInput{
@@ -57,7 +53,7 @@ func getExecutableName() string {
 	}
 }
 
-func TransformElevatorStates(elevators map[string]config.Elevator) map[string]config.HRAElevState {
+func transformElevatorStates(elevators map[string]config.Elevator) map[string]config.HRAElevState {
 	states := make(map[string]config.HRAElevState)
 
 	for id, elev := range elevators {
@@ -79,7 +75,9 @@ func TransformElevatorStates(elevators map[string]config.Elevator) map[string]co
 	return states
 }
 
-func PrepareHallRequests(elevators map[string]config.Elevator) [][2]bool {
+
+func prepareHallRequests(elevators map[string]config.Elevator) [][2]bool {
+
 	hallRequests := make([][2]bool, config.NumFloors)
 
 	for _, elev := range elevators {
@@ -96,8 +94,11 @@ func PrepareHallRequests(elevators map[string]config.Elevator) [][2]bool {
 	return hallRequests
 }
 
-func GetRequestStruct(hallRequests [][2]bool, states map[string]config.HRAElevState) config.AssignmentResults {
-	output, err := Costfunc(hallRequests, states)
+func getRequestStruct(elevators map[string]config.Elevator) config.AssignmentResults {
+	states := transformElevatorStates(elevators)
+	hallRequests := prepareHallRequests(elevators)
+
+	output, err := costfunc(hallRequests, states)
 	if err != nil {
 		fmt.Println("Error calling Costfunc:", err)
 	}
@@ -145,7 +146,7 @@ func dirnToString(dirn elevio.MotorDirection) string {
 	}
 }
 
-func WaitForAllACKs(orderChanTx chan *config.AssignmentResults, ElevatorsMap map[string]config.Elevator, ackChanRx chan string, newOrders config.AssignmentResults) {
+func waitForAllACKs(orderChanTx chan *config.AssignmentResults, ElevatorsMap map[string]config.Elevator, ackChanRx chan string, newOrders config.AssignmentResults) {
 	drainAckChannel(ackChanRx)
 	acksReceived := make(map[string]bool)
 	for id := range ElevatorsMap {
@@ -169,7 +170,8 @@ func WaitForAllACKs(orderChanTx chan *config.AssignmentResults, ElevatorsMap map
 					}
 				}
 				if allAcked {
-					return 
+					return
+
 				}
 			}
 			

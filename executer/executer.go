@@ -10,7 +10,6 @@ import (
 	"time"
 )
 
-
 func Fsm(elevator *config.Elevator, doorTimer *time.Timer, motorFaultTimer *time.Timer, numFloors int, elevatorsMap map[string]config.Elevator, hardware config.Hardwarechannels, network config.Networkchannels, peerTxEnable chan bool) {
 	orderhandler.ClearLights()
 
@@ -37,7 +36,7 @@ func Fsm(elevator *config.Elevator, doorTimer *time.Timer, motorFaultTimer *time
 			}
 
 		case newAssignedHallOrders := <-network.OrderChanRx:
-
+			
 			network.AckChanTx <- elevator.Id
 
 			statemachines.HallOrderFSM(elevator, newAssignedHallOrders, doorTimer, motorFaultTimer)
@@ -106,13 +105,12 @@ func Fsm(elevator *config.Elevator, doorTimer *time.Timer, motorFaultTimer *time
 			peerTxEnable <- false
 
 			orderhandler.GoToValidFloor(elevator)
-
-			if !elevio.GetObstruction() {
-				fmt.Println("BEHAVIOUR", elevator.Behaviour)
-				peerTxEnable <- true
-				orderhandler.OpenDoor(elevator, doorTimer)
-
-			}
+			time.AfterFunc(time.Second*2, func() {
+				if !elevio.GetObstruction() {
+					peerTxEnable <- true
+					orderhandler.OpenDoor(elevator, doorTimer)
+				}
+			})
 
 		}
 
