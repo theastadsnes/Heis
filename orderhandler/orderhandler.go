@@ -246,3 +246,8 @@ func StartMotor(elevator *config.Elevator, direction elevio.MotorDirection, moto
 	elevator.Behaviour = config.EB_Moving
 	motorFaultTimer.Reset(time.Second * 4)
 }
+
+
+
+
+
