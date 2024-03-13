@@ -63,6 +63,7 @@ func ElevatorFsm(elevator *config.Elevator, doorTimer *time.Timer, motorFaultTim
 					elevio.SetMotorDirection(elevator.Dirn)
 					if elevator.Dirn == elevio.MD_Stop {
 						elevator.Behaviour = config.EB_Idle
+						elevatorhelper.ClearRequestAtFloor(elevator)
 					} else {
 						elevator.Behaviour = config.EB_Moving
 						motorFaultTimer.Reset(time.Second * 4)

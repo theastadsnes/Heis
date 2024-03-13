@@ -39,7 +39,7 @@ func UpdateHallLights(elevator *config.Elevator, elevatorsMap map[string]config.
 
 func OpenDoor(elevator *config.Elevator, doorTimer *time.Timer) {
 	elevio.SetDoorOpenLamp(true)
-	clearRequestAtFloor(elevator)
+	ClearRequestAtFloor(elevator)
 	elevator.Behaviour = config.EB_DoorOpen
 	doorTimer.Reset(time.Duration(3) * time.Second)
 }

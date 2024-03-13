@@ -63,7 +63,9 @@ func ShouldStop(elevator *config.Elevator) bool {
 	return false
 }
 
-func clearRequestAtFloor(elevator *config.Elevator) {
+func ClearRequestAtFloor(elevator *config.Elevator) {
+	topFloor := 3
+	bottomFloor := 0
 	elevator.Requests[elevator.Floor][int(elevio.BT_Cab)] = false
 	elevio.SetButtonLamp(elevio.BT_Cab, elevator.Floor, false)
 
@@ -71,16 +73,15 @@ func clearRequestAtFloor(elevator *config.Elevator) {
 	case elevator.Dirn == elevio.MD_Up:
 		elevator.Requests[elevator.Floor][int(elevio.BT_HallUp)] = false
 		elevio.SetButtonLamp(elevio.BT_HallUp, elevator.Floor, false)
-		if !RequestsAbove(elevator) {
+		if elevator.Floor == topFloor {
 			elevator.Requests[elevator.Floor][int(elevio.BT_HallDown)] = false
 			elevio.SetButtonLamp(elevio.BT_HallDown, elevator.Floor, false)
 		}
 
 	case elevator.Dirn == elevio.MD_Down:
-
 		elevator.Requests[elevator.Floor][int(elevio.BT_HallDown)] = false
 		elevio.SetButtonLamp(elevio.BT_HallDown, elevator.Floor, false)
-		if !RequestsBelow(elevator) {
+		if elevator.Floor == bottomFloor {
 			elevator.Requests[elevator.Floor][int(elevio.BT_HallUp)] = false
 			elevio.SetButtonLamp(elevio.BT_HallUp, elevator.Floor, false)
 		}
