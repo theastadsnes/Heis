@@ -9,7 +9,7 @@ import (
 )
 
 func Watchdog(elevator *config.Elevator, peers chan peers.PeerUpdate, elevatorsMap map[string]config.Elevator, orderChanTx chan *config.AssignmentResults, ackChanRx chan string) {
-
+firstActivePeer:= 0
 	var lostElevatorsStates map[string]config.Elevator = make(map[string]config.Elevator)
 
 	for {
@@ -30,7 +30,8 @@ func Watchdog(elevator *config.Elevator, peers chan peers.PeerUpdate, elevatorsM
 						elevatorsMap[elevator.Id] = *elevator
 					}
 					lostElevatorsStates = make(map[string]config.Elevator)
-					if elevator.Id == peersUpdate.Peers[0] {
+					
+					if elevator.Id == peersUpdate.Peers[firstActivePeer] {
 						assigner.AssignHallOrders(orderChanTx, elevatorsMap, ackChanRx)
 					}
 				}
