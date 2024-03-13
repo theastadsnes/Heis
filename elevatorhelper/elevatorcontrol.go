@@ -3,6 +3,7 @@ package elevatorhelper
 import (
 	"Heis/config"
 	"Heis/driver/elevio"
+	"fmt"
 	"time"
 )
 
@@ -39,6 +40,7 @@ func UpdateHallLights(elevator *config.Elevator, elevatorsMap map[string]config.
 
 func OpenDoor(elevator *config.Elevator, doorTimer *time.Timer) {
 	elevio.SetDoorOpenLamp(true)
+	fmt.Println("opendoor--------", elevator.Requests)
 	ClearRequestAtFloor(elevator)
 	elevator.Behaviour = config.EB_DoorOpen
 	doorTimer.Reset(time.Duration(3) * time.Second)

@@ -3,6 +3,7 @@ package elevatorhelper
 import (
 	"Heis/config"
 	"Heis/driver/elevio"
+	"fmt"
 )
 
 func RequestsAbove(elevator *config.Elevator) bool {
@@ -63,6 +64,12 @@ func ShouldStop(elevator *config.Elevator) bool {
 	return false
 }
 
+func bothHallButtonsPressed(elevator *config.Elevator, floor int) bool {
+	fmt.Println("HallUp pressed:", elevator.Requests[floor][int(elevio.BT_HallUp)])
+	fmt.Println("HallDown pressed:", elevator.Requests[floor][int(elevio.BT_HallDown)])
+	return elevator.Requests[floor][int(elevio.BT_HallUp)] && elevator.Requests[floor][int(elevio.BT_HallDown)]
+}
+
 func ClearRequestAtFloor(elevator *config.Elevator) {
 	topFloor := 3
 	bottomFloor := 0
@@ -71,20 +78,24 @@ func ClearRequestAtFloor(elevator *config.Elevator) {
 
 	switch {
 	case elevator.Dirn == elevio.MD_Up:
+		if !RequestsAbove(elevator) {
+			if elevator.Floor == topFloor || !bothHallButtonsPressed(elevator, elevator.Floor) {
+				elevator.Requests[elevator.Floor][int(elevio.BT_HallDown)] = false
+				elevio.SetButtonLamp(elevio.BT_HallDown, elevator.Floor, false)
+			}
+		}
 		elevator.Requests[elevator.Floor][int(elevio.BT_HallUp)] = false
 		elevio.SetButtonLamp(elevio.BT_HallUp, elevator.Floor, false)
-		if elevator.Floor == topFloor {
-			elevator.Requests[elevator.Floor][int(elevio.BT_HallDown)] = false
-			elevio.SetButtonLamp(elevio.BT_HallDown, elevator.Floor, false)
-		}
 
 	case elevator.Dirn == elevio.MD_Down:
+		if !RequestsBelow(elevator) {
+			if elevator.Floor == bottomFloor || !bothHallButtonsPressed(elevator, elevator.Floor) {
+				elevator.Requests[elevator.Floor][int(elevio.BT_HallUp)] = false
+				elevio.SetButtonLamp(elevio.BT_HallUp, elevator.Floor, false)
+			}
+		}
 		elevator.Requests[elevator.Floor][int(elevio.BT_HallDown)] = false
 		elevio.SetButtonLamp(elevio.BT_HallDown, elevator.Floor, false)
-		if elevator.Floor == bottomFloor {
-			elevator.Requests[elevator.Floor][int(elevio.BT_HallUp)] = false
-			elevio.SetButtonLamp(elevio.BT_HallUp, elevator.Floor, false)
-		}
 
 	case elevator.Dirn == elevio.MD_Stop:
 		elevator.Requests[elevator.Floor][int(elevio.BT_HallDown)] = false

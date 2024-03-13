@@ -48,6 +48,7 @@ func ElevatorFsm(elevator *config.Elevator, doorTimer *time.Timer, motorFaultTim
 			}
 
 			if elevatorhelper.ShouldStop(elevator) {
+				fmt.Println("--------shouldstop------", elevator.Requests)
 				elevio.SetMotorDirection(elevio.MD_Stop)
 				elevatorhelper.OpenDoor(elevator, doorTimer)
 				motorFaultTimer.Stop()
@@ -67,6 +68,7 @@ func ElevatorFsm(elevator *config.Elevator, doorTimer *time.Timer, motorFaultTim
 					} else {
 						elevator.Behaviour = config.EB_Moving
 						motorFaultTimer.Reset(time.Second * 4)
+						elevatorhelper.ClearRequestAtFloor(elevator)
 					}
 
 				}
