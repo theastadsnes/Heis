@@ -136,3 +136,12 @@ func HasRequests(elevator *config.Elevator) bool {
 	return RequestsAbove(elevator) || RequestsBelow(elevator)
 
 }
+
+func ClearHallRequests(elevator *config.Elevator) {
+	for floors := 0; floors <= config.NumFloors; floors++ {
+		for buttons := 0; buttons < config.NumButtons-1; buttons++ {
+			elevator.Requests[buttons][floors] = false
+		}
+
+	}
+}

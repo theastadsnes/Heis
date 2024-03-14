@@ -18,15 +18,16 @@ func Watchdog(elevator *config.Elevator, peers chan peers.PeerUpdate, elevatorsM
 			fmt.Printf("  Peers:    %q\n", peersUpdate.Peers)
 			fmt.Printf("  New:      %q\n", peersUpdate.New)
 			fmt.Printf("  Lost:     %q\n", peersUpdate.Lost)
-			if len(peersUpdate.Peers) != 0 && elevatorInActivePeers(peersUpdate.Peers, elevator.Id) {
+			if len(peersUpdate.Peers) != 0 {
 				elevator.IsOnline = true
 
 				if len(peersUpdate.Lost) != 0 {
 					addToLostElevatorsMap(peersUpdate, elevatorsMap, lostElevatorsStates)
 					transferOrders(elevator, peersUpdate, lostElevatorsStates)
 
-					elevatorsMap[elevator.Id] = *elevator
-
+					if elevatorInActivePeers(peersUpdate.Peers, elevator.Id) {
+						elevatorsMap[elevator.Id] = *elevator
+					}
 					lostElevatorsStates = make(map[string]config.Elevator)
 
 					if elevator.Id == peersUpdate.Peers[firstActivePeer] {
@@ -68,15 +69,15 @@ func transferOrders(elevator *config.Elevator, peersUpdate peers.PeerUpdate, los
 					if lostElev.Requests[floor][button] {
 						elevator.Requests[floor][button] = true
 					}
-				}
-				for _, id := range peersUpdate.Lost {
-					if elevator.Id == id {
-						if lostElev.Requests[floor][button] {
-							elevator.Requests[floor][button] = false
+				} /*
+					for _, id := range peersUpdate.Lost {
+						if elevator.Id == id {
+							if lostElev.Requests[floor][button] {
+								elevator.Requests[floor][button] = false
 
+							}
 						}
-					}
-				}
+					}*/
 
 			}
 		}

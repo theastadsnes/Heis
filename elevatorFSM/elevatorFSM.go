@@ -90,6 +90,7 @@ func ElevatorFsm(elevator *config.Elevator, doorTimer *time.Timer, motorFaultTim
 			time.AfterFunc(time.Second*2, func() {
 				if !elevio.GetObstruction() {
 					peerTxEnable <- true
+					elevatorutilities.ClearHallRequests(elevator)
 					elevatorutilities.OpenDoor(elevator, doorTimer)
 				}
 			})
