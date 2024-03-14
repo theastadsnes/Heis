@@ -80,6 +80,7 @@ func ElevatorFsm(elevator *config.Elevator, doorTimer *time.Timer, motorFaultTim
 				motorFaultTimer.Stop()
 				doorTimer.Reset(time.Duration(3) * time.Second)
 				peerTxEnable <- true
+				elevatorutilities.ClearHallRequests(elevator)
 			}
 
 		case <-motorFaultTimer.C:

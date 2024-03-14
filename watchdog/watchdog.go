@@ -30,7 +30,6 @@ func Watchdog(elevator *config.Elevator, peers chan peers.PeerUpdate, elevatorsM
 					lostElevatorsStates = make(map[string]config.Elevator)
 
 					if elevator.Id == peersUpdate.Peers[firstActivePeer] {
-						fmt.Println("trying to assign hall orders")
 						assigner.AssignHallOrders(orderChanTx, elevatorsMap, ackChanRx)
 					}
 				}
@@ -68,16 +67,7 @@ func transferOrders(elevator *config.Elevator, peersUpdate peers.PeerUpdate, los
 					if lostElev.Requests[floor][button] {
 						elevator.Requests[floor][button] = true
 					}
-				} /*
-					for _, id := range peersUpdate.Lost {
-						if elevator.Id == id {
-							if lostElev.Requests[floor][button] {
-								elevator.Requests[floor][button] = false
-
-							}
-						}
-					}*/
-
+				}
 			}
 		}
 	}
