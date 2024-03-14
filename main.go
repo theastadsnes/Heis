@@ -16,7 +16,7 @@ func main() {
 
 	// Initializing
 	id := config.InitId()
-	elevio.Init("localhost:15657", config.NumFloors)
+	elevio.Init("localhost:15002", config.NumFloors)
 	elevator := config.InitElevState(id)
 	elevatorsMap := make(map[string]config.Elevator)
 
@@ -42,7 +42,7 @@ func main() {
 	}
 
 	AssignHallOrders := make(chan elevio.ButtonEvent)
-	localElevatorHalls := make(chan *config.AssignmentResults)
+	LocalElevatorHalls := make(chan *config.AssignmentResults)
 	// Creating timers
 	doorTimer := time.NewTimer(time.Duration(3) * time.Second)
 	motorFaultTimer := time.NewTimer(time.Second * 4)
@@ -61,11 +61,11 @@ func main() {
 	go bcast.Transmitter(16590, network.AckChanTx)
 	go bcast.Receiver(16590, network.AckChanRx)
 
-	go watchdog.SendElevatorStates(network.StateTx, &elevator)
+	go networking.SendElevatorStates(network.StateTx, &elevator)
 	go watchdog.Watchdog(&elevator, peerschannels.PeerUpdateCh, elevatorsMap, network.OrderChanTx, network.AckChanRx)
 
-	go elevatorFsm.ElevatorFsm(&elevator, doorTimer, motorFaultTimer, hardware, network, peerschannels.PeerTxEnable, AssignHallOrders, localElevatorHalls)
-	go networking.Network(&elevator, elevatorsMap, hardware, network, AssignHallOrders, localElevatorHalls)
+	go elevatorFsm.ElevatorFsm(&elevator, doorTimer, motorFaultTimer, hardware, peerschannels.PeerTxEnable, AssignHallOrders, LocalElevatorHalls)
+	go networking.Network(&elevator, elevatorsMap, hardware, network, AssignHallOrders, LocalElevatorHalls)
 	elevatorhelper.ReadCabCallsFromBackup(hardware.Drv_buttons)
 
 	select {}

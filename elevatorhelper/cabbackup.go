@@ -11,7 +11,7 @@ import (
 )
 
 func WriteCabCallsToBackup(elevator *config.Elevator) {
-	filename := "orderhandler/cabOrder.txt"
+	filename := "elevatorhelper/cabOrder.txt"
 	f, err := os.Create(filename)
 	if err != nil {
 		return
@@ -33,7 +33,7 @@ func WriteCabCallsToBackup(elevator *config.Elevator) {
 }
 
 func ReadCabCallsFromBackup(buttons chan elevio.ButtonEvent) {
-	filename := "orderhandler/cabOrder.txt"
+	filename := "elevatorhelper/cabOrder.txt"
 	f, err := os.ReadFile(filename)
 	if err != nil {
 		return

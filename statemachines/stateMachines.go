@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func CabOrderFSM(elevator *config.Elevator, orderFloor int, orderButton elevio.ButtonType, doorTimer *time.Timer, motorFaultTimer *time.Timer) {
+func CabOrderStateMachine(elevator *config.Elevator, orderFloor int, orderButton elevio.ButtonType, doorTimer *time.Timer, motorFaultTimer *time.Timer) {
 
 	elevio.SetButtonLamp(orderButton, orderFloor, true)
 
@@ -67,7 +67,7 @@ func updateHallOrders(elevator *config.Elevator, orderFloor *[config.NumFloors][
 	}
 }
 
-func HallOrderFSM(elevator *config.Elevator, newAssignedOrders *config.AssignmentResults, doorTimer *time.Timer, motorFaultTimer *time.Timer) {
+func HallOrderStateMachine(elevator *config.Elevator, newAssignedOrders *config.AssignmentResults, doorTimer *time.Timer, motorFaultTimer *time.Timer) {
 
 	var orderFloor [config.NumFloors][config.NumButtons - 1]bool
 	updateHallOrders(elevator, &orderFloor, newAssignedOrders)

@@ -10,49 +10,33 @@ import (
 	"time"
 )
 
-func ElevatorFsm(elevator *config.Elevator, doorTimer *time.Timer, motorFaultTimer *time.Timer, hardware config.Hardwarechannels, network config.Networkchannels, peerTxEnable chan bool, AssignHallOrders chan elevio.ButtonEvent, localElevatorHalls chan *config.AssignmentResults) {
+func ElevatorFsm(elevator *config.Elevator, doorTimer *time.Timer, motorFaultTimer *time.Timer, hardware config.Hardwarechannels, peerTxEnable chan bool, AssignHallOrders chan elevio.ButtonEvent, localElevatorHalls chan *config.AssignmentResults) {
 
 	for {
 		select {
-		// case stateReceived := <-network.StateRx:
-
-		// 	elevatorsMap[stateReceived.Id] = *stateReceived
-		// 	elevatorhelper.UpdateHallLights(elevator, elevatorsMap)
-
+		
 		case order := <-hardware.Drv_buttons:
-
 			if order.Button == elevio.BT_Cab {
-				statemachines.CabOrderFSM(elevator, order.Floor, order.Button, doorTimer, motorFaultTimer)
+				statemachines.CabOrderStateMachine(elevator, order.Floor, order.Button, doorTimer, motorFaultTimer)
 			} else {
-
 				if elevator.IsOnline {
-					fmt.Println("assign halls -----")
 					AssignHallOrders <- order
-					// elevatorsMapCopy := elevatorsMap
-					// elevatorsMapCopy[elevator.Id].Requests[order.Floor][order.Button] = true
-					// assigner.AssignHallOrders(network.OrderChanTx, elevatorsMapCopy, network.AckChanRx)
 				}
 			}
 
-		// case newAssignedHallOrders := <-network.OrderChanRx:
-		// 	network.AckChanTx <- elevator.Id
-		// 	statemachines.HallOrderFSM(elevator, newAssignedHallOrders, doorTimer, motorFaultTimer)
 		case hallOrders := <-localElevatorHalls:
-			fmt.Println("Kjør hallorderFSM -----")
-			statemachines.HallOrderFSM(elevator, hallOrders, doorTimer, motorFaultTimer)
+			statemachines.HallOrderStateMachine(elevator, hallOrders, doorTimer, motorFaultTimer)
 
 		case floor := <-hardware.Drv_floors:
 			elevator.Floor = floor
 			elevio.SetFloorIndicator(floor)
 			motorFaultTimer.Reset(time.Second * 4)
-			fmt.Println(elevator.Dirn)
-
+		
 			if elevator.Dirn == elevio.MD_Stop {
 				motorFaultTimer.Stop()
 			}
 
 			if elevatorhelper.ShouldStop(elevator) {
-				fmt.Println("--------shouldstop------", elevator.Requests)
 				elevio.SetMotorDirection(elevio.MD_Stop)
 				elevatorhelper.OpenDoor(elevator, doorTimer)
 				motorFaultTimer.Stop()
@@ -83,7 +67,6 @@ func ElevatorFsm(elevator *config.Elevator, doorTimer *time.Timer, motorFaultTim
 
 		case obstruction := <-hardware.Drv_obstr:
 			if obstruction {
-
 				if elevator.Behaviour == config.EB_DoorOpen {
 					motorFaultTimer.Reset(time.Second * 7)
 					if !doorTimer.Stop() {
@@ -104,7 +87,6 @@ func ElevatorFsm(elevator *config.Elevator, doorTimer *time.Timer, motorFaultTim
 		case <-motorFaultTimer.C:
 			fmt.Println("MOTORFAULT", elevator.Floor)
 			peerTxEnable <- false
-
 			elevatorhelper.GoToValidFloor(elevator)
 
 			time.AfterFunc(time.Second*2, func() {
@@ -113,7 +95,6 @@ func ElevatorFsm(elevator *config.Elevator, doorTimer *time.Timer, motorFaultTim
 					elevatorhelper.OpenDoor(elevator, doorTimer)
 				}
 			})
-
 		}
 
 		elevatorhelper.WriteCabCallsToBackup(elevator)

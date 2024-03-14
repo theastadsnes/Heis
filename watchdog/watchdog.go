@@ -5,11 +5,10 @@ import (
 	"Heis/config"
 	"Heis/network/peers"
 	"fmt"
-	"time"
 )
 
 func Watchdog(elevator *config.Elevator, peers chan peers.PeerUpdate, elevatorsMap map[string]config.Elevator, orderChanTx chan *config.AssignmentResults, ackChanRx chan string) {
-firstActivePeer:= 0
+	firstActivePeer := 0
 	var lostElevatorsStates map[string]config.Elevator = make(map[string]config.Elevator)
 
 	for {
@@ -30,7 +29,7 @@ firstActivePeer:= 0
 						elevatorsMap[elevator.Id] = *elevator
 					}
 					lostElevatorsStates = make(map[string]config.Elevator)
-					
+
 					if elevator.Id == peersUpdate.Peers[firstActivePeer] {
 						assigner.AssignHallOrders(orderChanTx, elevatorsMap, ackChanRx)
 					}
@@ -84,9 +83,9 @@ func transferOrders(elevator *config.Elevator, peersUpdate peers.PeerUpdate, los
 	}
 }
 
-func SendElevatorStates(stateTx chan *config.Elevator, elevator *config.Elevator) {
-	for {
-		stateTx <- elevator
-		time.Sleep(200 * time.Millisecond)
-	}
-}
+// func SendElevatorStates(stateTx chan *config.Elevator, elevator *config.Elevator) {
+// 	for {
+// 		stateTx <- elevator
+// 		time.Sleep(200 * time.Millisecond)
+// 	}
+// }
