@@ -20,10 +20,10 @@ Follow these steps to set up your environment:
    ```bash
    chmod +x /path/to/executable
 4. Open your terminal or command prompt and run the elevatorserver like this:
- ```bash
-elevatorserver
+   ```bash
+   elevatorserver
    
-5. Change the port number in the elevio.Init function in the main.go file to match the port number used by the elevatorserver. 
+6. Change the port number in the elevio.Init function in the main.go file to match the port number used by the elevatorserver. 
 
 ## Compilation and Execution
 
@@ -31,8 +31,7 @@ To compile and run this project, execute the following steps:
 
 1. Open another terminal or command prompt.
 2. Navigate to the project's root directory.
-3. 
-4. Run the project using:
+3. Run the project using:
    ```bash
    go run main.go
 
