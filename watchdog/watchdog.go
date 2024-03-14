@@ -5,6 +5,7 @@ import (
 	"Heis/config"
 	"Heis/network/peers"
 	"fmt"
+	"time"
 )
 
 func Watchdog(elevator *config.Elevator, peers chan peers.PeerUpdate, elevatorsMap map[string]config.Elevator, orderChanTx chan *config.AssignmentResults, ackChanRx chan string) {
@@ -18,25 +19,27 @@ func Watchdog(elevator *config.Elevator, peers chan peers.PeerUpdate, elevatorsM
 			fmt.Printf("  Peers:    %q\n", peersUpdate.Peers)
 			fmt.Printf("  New:      %q\n", peersUpdate.New)
 			fmt.Printf("  Lost:     %q\n", peersUpdate.Lost)
-			if len(peersUpdate.Peers) != 0 {
-				elevator.IsOnline = true
+			time.AfterFunc(time.Second*1, func() {
+				if len(peersUpdate.Peers) != 0 {
+					elevator.IsOnline = true
 
-				if len(peersUpdate.Lost) != 0 {
-					addToLostElevatorsMap(peersUpdate, elevatorsMap, lostElevatorsStates)
-					transferOrders(elevator, peersUpdate, lostElevatorsStates)
+					if len(peersUpdate.Lost) != 0 {
+						addToLostElevatorsMap(peersUpdate, elevatorsMap, lostElevatorsStates)
+						transferOrders(elevator, peersUpdate, lostElevatorsStates)
 
-					if elevatorInActivePeers(peersUpdate.Peers, elevator.Id) {
-						elevatorsMap[elevator.Id] = *elevator
+						if elevatorInActivePeers(peersUpdate.Peers, elevator.Id) {
+							elevatorsMap[elevator.Id] = *elevator
+						}
+						lostElevatorsStates = make(map[string]config.Elevator)
+
+						if elevator.Id == peersUpdate.Peers[firstActivePeer] {
+							assigner.AssignHallOrders(orderChanTx, elevatorsMap, ackChanRx)
+						}
 					}
-					lostElevatorsStates = make(map[string]config.Elevator)
-
-					if elevator.Id == peersUpdate.Peers[firstActivePeer] {
-						assigner.AssignHallOrders(orderChanTx, elevatorsMap, ackChanRx)
-					}
+				} else {
+					elevator.IsOnline = false
 				}
-			} else {
-				elevator.IsOnline = false
-			}
+			})
 
 		}
 	}
