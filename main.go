@@ -9,7 +9,6 @@ import (
 	"Heis/network/networking"
 	"Heis/network/peers"
 	"Heis/watchdog"
-	"fmt"
 	"time"
 )
 
@@ -17,7 +16,6 @@ func main() {
 
 	// Initializing
 	id := config.InitId()
-	fmt.Println(id)
 	elevio.Init("localhost:15657", config.NumFloors)
 	elevator := config.InitElevState(id)
 	elevatorsMap := make(map[string]config.Elevator)
