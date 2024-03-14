@@ -14,8 +14,8 @@ Before you start, ensure you have the following:
 
 Follow these steps to set up your environment:
 
-1. Download the necessary executable from the project's resources.
-2. Place the downloaded executable in the project's root directory.
+1. Download the necessary executable from the project's resources. For Ubuntu systems, you will need to use the file hall_request_assigner.
+2. Place the downloaded executable in the project's root directory. We use this executable in the function getExecutableName() in the file assigner.go.
 3. Change the permission of the executable to make it runnable. On an Ubuntu system, you can use the following command:
    ```bash
    chmod +x /path/to/executable
