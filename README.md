@@ -2,7 +2,7 @@
 
 ## Overview
 
-This project demonstrates an elevator control system designed to control n elevators in parallell across m floors. It utilizes Go for its main programming logic and used a peer to peer approach and UDP broadcasting to solve the problem. In the instructions for the code hand-in, we were asked not to include any executables within our submitted files. Consequently, users of this project will need to download the required executable separately from the project's resources. This step is essential for the full functionality of the system.
+This project demonstrates an elevator control system designed to control n elevators in parallell across m floors. We utilized Go for its  programming logic and used a peer to peer approach and UDP broadcasting to solve the problem. In the instructions for the code hand-in, we were asked not to include any executables within our submitted files. Consequently, users of this project will need to download the required executable separately from the project's resources. This step is essential for the full functionality of the system.
 
 ## Prerequisites
 
