@@ -138,9 +138,9 @@ func HasRequests(elevator *config.Elevator) bool {
 }
 
 func ClearHallRequests(elevator *config.Elevator) {
-	for floors := 0; floors <= config.NumFloors; floors++ {
-		for buttons := 0; buttons < config.NumButtons-1; buttons++ {
-			elevator.Requests[buttons][floors] = false
+	for floors := 0; floors < config.NumFloors; floors++ {
+		for buttons := 0; buttons < (config.NumButtons - 1); buttons++ {
+			elevator.Requests[floors][buttons] = false
 		}
 
 	}
