@@ -6,6 +6,7 @@ import (
 	"Heis/elevatorFsm"
 	"Heis/elevatorhelper"
 	"Heis/network/bcast"
+	"Heis/network/networking"
 	"Heis/network/peers"
 	"Heis/watchdog"
 	"time"
@@ -40,6 +41,8 @@ func main() {
 		PeerTxEnable: make(chan bool, 100),
 	}
 
+	AssignHallOrders := make(chan elevio.ButtonEvent)
+	localElevatorHalls := make(chan *config.AssignmentResults)
 	// Creating timers
 	doorTimer := time.NewTimer(time.Duration(3) * time.Second)
 	motorFaultTimer := time.NewTimer(time.Second * 4)
@@ -61,8 +64,8 @@ func main() {
 	go watchdog.SendElevatorStates(network.StateTx, &elevator)
 	go watchdog.Watchdog(&elevator, peerschannels.PeerUpdateCh, elevatorsMap, network.OrderChanTx, network.AckChanRx)
 
-	go elevatorFsm.ElevatorFsm(&elevator, doorTimer, motorFaultTimer, config.NumFloors, elevatorsMap, hardware, network, peerschannels.PeerTxEnable)
-
+	go elevatorFsm.ElevatorFsm(&elevator, doorTimer, motorFaultTimer, hardware, network, peerschannels.PeerTxEnable, AssignHallOrders, localElevatorHalls)
+	go networking.Network(&elevator, elevatorsMap, hardware, network, AssignHallOrders, localElevatorHalls)
 	elevatorhelper.ReadCabCallsFromBackup(hardware.Drv_buttons)
 
 	select {}

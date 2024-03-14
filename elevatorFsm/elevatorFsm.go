@@ -1,7 +1,7 @@
 package elevatorFsm
 
 import (
-	"Heis/assigner"
+	//"Heis/assigner"
 	"Heis/config"
 	"Heis/driver/elevio"
 	"Heis/elevatorhelper"
@@ -10,15 +10,14 @@ import (
 	"time"
 )
 
-func ElevatorFsm(elevator *config.Elevator, doorTimer *time.Timer, motorFaultTimer *time.Timer, numFloors int, elevatorsMap map[string]config.Elevator, hardware config.Hardwarechannels, network config.Networkchannels, peerTxEnable chan bool) {
-	elevatorhelper.ClearLights()
+func ElevatorFsm(elevator *config.Elevator, doorTimer *time.Timer, motorFaultTimer *time.Timer, hardware config.Hardwarechannels, network config.Networkchannels, peerTxEnable chan bool, AssignHallOrders chan elevio.ButtonEvent, localElevatorHalls chan *config.AssignmentResults) {
 
 	for {
 		select {
-		case stateReceived := <-network.StateRx:
+		// case stateReceived := <-network.StateRx:
 
-			elevatorsMap[stateReceived.Id] = *stateReceived
-			elevatorhelper.UpdateHallLights(elevator, elevatorsMap)
+		// 	elevatorsMap[stateReceived.Id] = *stateReceived
+		// 	elevatorhelper.UpdateHallLights(elevator, elevatorsMap)
 
 		case order := <-hardware.Drv_buttons:
 
@@ -27,15 +26,20 @@ func ElevatorFsm(elevator *config.Elevator, doorTimer *time.Timer, motorFaultTim
 			} else {
 
 				if elevator.IsOnline {
-					elevatorsMapCopy := elevatorsMap
-					elevatorsMapCopy[elevator.Id].Requests[order.Floor][order.Button] = true
-					assigner.AssignHallOrders(network.OrderChanTx, elevatorsMapCopy, network.AckChanRx)
+					fmt.Println("assign halls -----")
+					AssignHallOrders <- order
+					// elevatorsMapCopy := elevatorsMap
+					// elevatorsMapCopy[elevator.Id].Requests[order.Floor][order.Button] = true
+					// assigner.AssignHallOrders(network.OrderChanTx, elevatorsMapCopy, network.AckChanRx)
 				}
 			}
 
-		case newAssignedHallOrders := <-network.OrderChanRx:
-			network.AckChanTx <- elevator.Id
-			statemachines.HallOrderFSM(elevator, newAssignedHallOrders, doorTimer, motorFaultTimer)
+		// case newAssignedHallOrders := <-network.OrderChanRx:
+		// 	network.AckChanTx <- elevator.Id
+		// 	statemachines.HallOrderFSM(elevator, newAssignedHallOrders, doorTimer, motorFaultTimer)
+		case hallOrders := <-localElevatorHalls:
+			fmt.Println("Kjør hallorderFSM -----")
+			statemachines.HallOrderFSM(elevator, hallOrders, doorTimer, motorFaultTimer)
 
 		case floor := <-hardware.Drv_floors:
 			elevator.Floor = floor
