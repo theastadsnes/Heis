@@ -1,4 +1,4 @@
-package elevatorhelper
+package elevatorutilities
 
 import (
 	"Heis/config"
@@ -11,7 +11,7 @@ import (
 )
 
 func WriteCabCallsToBackup(elevator *config.Elevator) {
-	filename := "elevatorhelper/cabOrder.txt"
+	filename := "elevatorutilities/cabOrder.txt"
 	f, err := os.Create(filename)
 	if err != nil {
 		return
@@ -33,7 +33,7 @@ func WriteCabCallsToBackup(elevator *config.Elevator) {
 }
 
 func ReadCabCallsFromBackup(buttons chan elevio.ButtonEvent) {
-	filename := "elevatorhelper/cabOrder.txt"
+	filename := "elevatorutilities/cabOrder.txt"
 	f, err := os.ReadFile(filename)
 	if err != nil {
 		return

@@ -1,7 +1,3 @@
-/**
- * @file elevio.go
- * @brief Provides functions for interacting with elevator I/O.
- */
 
 package elevio
 

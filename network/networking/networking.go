@@ -3,30 +3,26 @@ package networking
 import (
 	"Heis/assigner"
 	"Heis/config"
-	"Heis/driver/elevio"
-	"Heis/elevatorhelper"
-	"fmt"
+	"Heis/elevatorutilities"
 	"time"
 )
 
-
-func Network(elevator *config.Elevator, elevatorsMap map[string]config.Elevator, hardware config.Hardwarechannels, network config.Networkchannels, AssignHallOrders chan elevio.ButtonEvent, localElevatorHalls chan *config.AssignmentResults) {
+func Networking(elevator *config.Elevator, elevatorsMap map[string]config.Elevator, localElevatorChannels config.LocalElevChannels, network config.Networkchannels) {
 	for {
 		select {
 		case stateReceived := <-network.StateRx:
 
 			elevatorsMap[stateReceived.Id] = *stateReceived
-			elevatorhelper.UpdateHallLights(elevator, elevatorsMap)
+			elevatorutilities.UpdateHallLights(elevator, elevatorsMap)
 
-		case hallOrder := <-AssignHallOrders:
+		case hallOrder := <-localElevatorChannels.AssignHallOrders:
 			elevatorsMapCopy := elevatorsMap
 			elevatorsMapCopy[elevator.Id].Requests[hallOrder.Floor][hallOrder.Button] = true
 			assigner.AssignHallOrders(network.OrderChanTx, elevatorsMapCopy, network.AckChanRx)
 
 		case newAssignedHallOrders := <-network.OrderChanRx:
-			fmt.Println("Mottatt nye ordra fra costfunksjon")
 			network.AckChanTx <- elevator.Id
-			localElevatorHalls <- newAssignedHallOrders
+			localElevatorChannels.HallOrders <- newAssignedHallOrders
 
 		}
 

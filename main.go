@@ -3,8 +3,8 @@ package main
 import (
 	"Heis/config"
 	"Heis/driver/elevio"
-	"Heis/elevatorFsm"
-	"Heis/elevatorhelper"
+	"Heis/elevatorFSM"
+	"Heis/elevatorutilities"
 	"Heis/network/bcast"
 	"Heis/network/networking"
 	"Heis/network/peers"
@@ -16,18 +16,20 @@ func main() {
 
 	// Initializing
 	id := config.InitId()
-	elevio.Init("localhost:15002", config.NumFloors)
+	elevio.Init("localhost:15657", config.NumFloors)
 	elevator := config.InitElevState(id)
 	elevatorsMap := make(map[string]config.Elevator)
 
 	// Creating channels
-	hardware := config.Hardwarechannels{
-		Drv_buttons: make(chan elevio.ButtonEvent),
-		Drv_floors:  make(chan int),
-		Drv_obstr:   make(chan bool),
+	localElevatorChannels := config.LocalElevChannels{
+		Drv_buttons:      make(chan elevio.ButtonEvent),
+		Drv_floors:       make(chan int),
+		Drv_obstr:        make(chan bool),
+		AssignHallOrders: make(chan elevio.ButtonEvent),
+		HallOrders:       make(chan *config.AssignmentResults),
 	}
 
-	network := config.Networkchannels{
+	networkChannels := config.Networkchannels{
 		OrderChanRx: make(chan *config.AssignmentResults, 100),
 		OrderChanTx: make(chan *config.AssignmentResults, 100),
 		StateRx:     make(chan *config.Elevator, 100),
@@ -36,37 +38,35 @@ func main() {
 		AckChanTx:   make(chan string, 100),
 	}
 
-	peerschannels := config.Peerchannels{
+	peersChannels := config.Peerchannels{
 		PeerUpdateCh: make(chan peers.PeerUpdate, 100),
 		PeerTxEnable: make(chan bool, 100),
 	}
 
-	AssignHallOrders := make(chan elevio.ButtonEvent)
-	LocalElevatorHalls := make(chan *config.AssignmentResults)
 	// Creating timers
 	doorTimer := time.NewTimer(time.Duration(3) * time.Second)
 	motorFaultTimer := time.NewTimer(time.Second * 4)
 
 	// Start polling
-	go elevio.PollButtons(hardware.Drv_buttons)
-	go elevio.PollFloorSensor(hardware.Drv_floors)
-	go elevio.PollObstructionSwitch(hardware.Drv_obstr)
+	go elevio.PollButtons(localElevatorChannels.Drv_buttons)
+	go elevio.PollFloorSensor(localElevatorChannels.Drv_floors)
+	go elevio.PollObstructionSwitch(localElevatorChannels.Drv_obstr)
 
-	go peers.Transmitter(23853, id, peerschannels.PeerTxEnable)
-	go peers.Receiver(23853, peerschannels.PeerUpdateCh)
-	go bcast.Transmitter(16563, network.StateTx)
-	go bcast.Receiver(16563, network.StateRx)
-	go bcast.Transmitter(16570, network.OrderChanTx)
-	go bcast.Receiver(16570, network.OrderChanRx)
-	go bcast.Transmitter(16590, network.AckChanTx)
-	go bcast.Receiver(16590, network.AckChanRx)
+	go peers.Transmitter(23853, id, peersChannels.PeerTxEnable)
+	go peers.Receiver(23853, peersChannels.PeerUpdateCh)
+	go bcast.Transmitter(16563, networkChannels.StateTx)
+	go bcast.Receiver(16563, networkChannels.StateRx)
+	go bcast.Transmitter(16570, networkChannels.OrderChanTx)
+	go bcast.Receiver(16570, networkChannels.OrderChanRx)
+	go bcast.Transmitter(16590, networkChannels.AckChanTx)
+	go bcast.Receiver(16590, networkChannels.AckChanRx)
 
-	go networking.SendElevatorStates(network.StateTx, &elevator)
-	go watchdog.Watchdog(&elevator, peerschannels.PeerUpdateCh, elevatorsMap, network.OrderChanTx, network.AckChanRx)
+	go networking.SendElevatorStates(networkChannels.StateTx, &elevator)
+	go watchdog.Watchdog(&elevator, peersChannels.PeerUpdateCh, elevatorsMap, networkChannels.OrderChanTx, networkChannels.AckChanRx)
 
-	go elevatorFsm.ElevatorFsm(&elevator, doorTimer, motorFaultTimer, hardware, peerschannels.PeerTxEnable, AssignHallOrders, LocalElevatorHalls)
-	go networking.Network(&elevator, elevatorsMap, hardware, network, AssignHallOrders, LocalElevatorHalls)
-	elevatorhelper.ReadCabCallsFromBackup(hardware.Drv_buttons)
+	go elevatorFSM.ElevatorFsm(&elevator, doorTimer, motorFaultTimer, localElevatorChannels, peersChannels.PeerTxEnable)
+	go networking.Networking(&elevator, elevatorsMap, localElevatorChannels, networkChannels)
+	elevatorutilities.ReadCabCallsFromBackup(localElevatorChannels.Drv_buttons)
 
 	select {}
 

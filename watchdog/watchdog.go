@@ -82,10 +82,3 @@ func transferOrders(elevator *config.Elevator, peersUpdate peers.PeerUpdate, los
 		}
 	}
 }
-
-// func SendElevatorStates(stateTx chan *config.Elevator, elevator *config.Elevator) {
-// 	for {
-// 		stateTx <- elevator
-// 		time.Sleep(200 * time.Millisecond)
-// 	}
-// }

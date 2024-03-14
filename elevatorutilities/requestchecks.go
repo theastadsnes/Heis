@@ -1,9 +1,8 @@
-package elevatorhelper
+package elevatorutilities
 
 import (
 	"Heis/config"
 	"Heis/driver/elevio"
-	"fmt"
 )
 
 func RequestsAbove(elevator *config.Elevator) bool {
@@ -65,8 +64,6 @@ func ShouldStop(elevator *config.Elevator) bool {
 }
 
 func bothHallButtonsPressed(elevator *config.Elevator, floor int) bool {
-	fmt.Println("HallUp pressed:", elevator.Requests[floor][int(elevio.BT_HallUp)])
-	fmt.Println("HallDown pressed:", elevator.Requests[floor][int(elevio.BT_HallDown)])
 	return elevator.Requests[floor][int(elevio.BT_HallUp)] && elevator.Requests[floor][int(elevio.BT_HallDown)]
 }
 

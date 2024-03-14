@@ -1,44 +1,43 @@
-package elevatorFsm
+package elevatorFSM
 
 import (
-	//"Heis/assigner"
 	"Heis/config"
 	"Heis/driver/elevio"
-	"Heis/elevatorhelper"
+	"Heis/elevatorutilities"
 	"Heis/statemachines"
 	"fmt"
 	"time"
 )
 
-func ElevatorFsm(elevator *config.Elevator, doorTimer *time.Timer, motorFaultTimer *time.Timer, hardware config.Hardwarechannels, peerTxEnable chan bool, AssignHallOrders chan elevio.ButtonEvent, localElevatorHalls chan *config.AssignmentResults) {
+func ElevatorFsm(elevator *config.Elevator, doorTimer *time.Timer, motorFaultTimer *time.Timer, localElevatorChannels config.LocalElevChannels, peerTxEnable chan bool) {
 
 	for {
 		select {
-		
-		case order := <-hardware.Drv_buttons:
+
+		case order := <-localElevatorChannels.Drv_buttons:
 			if order.Button == elevio.BT_Cab {
 				statemachines.CabOrderStateMachine(elevator, order.Floor, order.Button, doorTimer, motorFaultTimer)
 			} else {
 				if elevator.IsOnline {
-					AssignHallOrders <- order
+					localElevatorChannels.AssignHallOrders <- order
 				}
 			}
 
-		case hallOrders := <-localElevatorHalls:
+		case hallOrders := <-localElevatorChannels.HallOrders:
 			statemachines.HallOrderStateMachine(elevator, hallOrders, doorTimer, motorFaultTimer)
 
-		case floor := <-hardware.Drv_floors:
+		case floor := <-localElevatorChannels.Drv_floors:
 			elevator.Floor = floor
 			elevio.SetFloorIndicator(floor)
 			motorFaultTimer.Reset(time.Second * 4)
-		
+
 			if elevator.Dirn == elevio.MD_Stop {
 				motorFaultTimer.Stop()
 			}
 
-			if elevatorhelper.ShouldStop(elevator) {
+			if elevatorutilities.ShouldStop(elevator) {
 				elevio.SetMotorDirection(elevio.MD_Stop)
-				elevatorhelper.OpenDoor(elevator, doorTimer)
+				elevatorutilities.OpenDoor(elevator, doorTimer)
 				motorFaultTimer.Stop()
 			}
 
@@ -48,24 +47,23 @@ func ElevatorFsm(elevator *config.Elevator, doorTimer *time.Timer, motorFaultTim
 				elevio.SetDoorOpenLamp(false)
 				switch {
 				case elevator.Behaviour == config.EB_DoorOpen:
-					elevatorhelper.RequestsChooseDirection(elevator)
+					elevatorutilities.RequestsChooseDirection(elevator)
 					elevio.SetMotorDirection(elevator.Dirn)
 					if elevator.Dirn == elevio.MD_Stop {
 						elevator.Behaviour = config.EB_Idle
-						elevatorhelper.ClearRequestAtFloor(elevator)
+						elevatorutilities.ClearRequestAtFloor(elevator)
 					} else {
 						elevator.Behaviour = config.EB_Moving
 						motorFaultTimer.Reset(time.Second * 4)
-						elevatorhelper.ClearRequestAtFloor(elevator)
+						elevatorutilities.ClearRequestAtFloor(elevator)
 					}
 
 				}
-
 			} else {
 				motorFaultTimer.Reset(time.Second * 4)
 			}
 
-		case obstruction := <-hardware.Drv_obstr:
+		case obstruction := <-localElevatorChannels.Drv_obstr:
 			if obstruction {
 				if elevator.Behaviour == config.EB_DoorOpen {
 					motorFaultTimer.Reset(time.Second * 7)
@@ -87,16 +85,16 @@ func ElevatorFsm(elevator *config.Elevator, doorTimer *time.Timer, motorFaultTim
 		case <-motorFaultTimer.C:
 			fmt.Println("MOTORFAULT", elevator.Floor)
 			peerTxEnable <- false
-			elevatorhelper.GoToValidFloor(elevator)
+			elevatorutilities.GoToValidFloor(elevator)
 
 			time.AfterFunc(time.Second*2, func() {
 				if !elevio.GetObstruction() {
 					peerTxEnable <- true
-					elevatorhelper.OpenDoor(elevator, doorTimer)
+					elevatorutilities.OpenDoor(elevator, doorTimer)
 				}
 			})
 		}
 
-		elevatorhelper.WriteCabCallsToBackup(elevator)
+		elevatorutilities.WriteCabCallsToBackup(elevator)
 	}
 }

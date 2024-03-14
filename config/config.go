@@ -53,10 +53,12 @@ type AssignmentResults struct {
 	Assignments []HallRequestAssignment
 }
 
-type Hardwarechannels struct {
-	Drv_buttons chan elevio.ButtonEvent
-	Drv_floors  chan int
-	Drv_obstr   chan bool
+type LocalElevChannels struct {
+	Drv_buttons      chan elevio.ButtonEvent
+	Drv_floors       chan int
+	Drv_obstr        chan bool
+	AssignHallOrders chan elevio.ButtonEvent
+	HallOrders       chan *AssignmentResults
 }
 
 type Networkchannels struct {

@@ -45,9 +45,9 @@ func costfunc(hallRequests [][2]bool, states map[string]config.HRAElevState) (ma
 func getExecutableName() string {
 	switch runtime.GOOS {
 	case "linux":
-		return "executables/hall_request_assigner"
+		return "hall_request_assigner"
 	case "windows":
-		return "executables/hall_request_assigner.exe"
+		return "hall_request_assigner.exe"
 	default:
 		panic("OS not supported")
 	}
@@ -55,7 +55,7 @@ func getExecutableName() string {
 
 func transformElevatorStates(elevators map[string]config.Elevator) map[string]config.HRAElevState {
 	states := make(map[string]config.HRAElevState)
-	
+
 	for id, elev := range elevators {
 		cabRequests := make([]bool, len(elev.Requests))
 		for floor := 0; floor < len(elev.Requests[0]); floor++ {
@@ -74,7 +74,6 @@ func transformElevatorStates(elevators map[string]config.Elevator) map[string]co
 
 	return states
 }
-
 
 func prepareHallRequests(elevators map[string]config.Elevator) [][2]bool {
 
@@ -174,7 +173,7 @@ func waitForAllACKs(orderChanTx chan *config.AssignmentResults, ElevatorsMap map
 
 				}
 			}
-			
+
 		case <-time.After(500 * time.Millisecond):
 			fmt.Println("Timeout: Not all acknowledgments received")
 			return
