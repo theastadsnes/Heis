@@ -18,16 +18,15 @@ func Watchdog(elevator *config.Elevator, peers chan peers.PeerUpdate, elevatorsM
 			fmt.Printf("  Peers:    %q\n", peersUpdate.Peers)
 			fmt.Printf("  New:      %q\n", peersUpdate.New)
 			fmt.Printf("  Lost:     %q\n", peersUpdate.Lost)
-			if len(peersUpdate.Peers) != 0 {
+			if elevatorInActivePeers(peersUpdate.Peers, elevator.Id) {
 				elevator.IsOnline = true
 
 				if len(peersUpdate.Lost) != 0 {
 					addToLostElevatorsMap(peersUpdate, elevatorsMap, lostElevatorsStates)
 					transferOrders(elevator, peersUpdate, lostElevatorsStates)
 
-					if elevatorInActivePeers(peersUpdate.Peers, elevator.Id) {
-						elevatorsMap[elevator.Id] = *elevator
-					}
+					elevatorsMap[elevator.Id] = *elevator
+
 					lostElevatorsStates = make(map[string]config.Elevator)
 
 					if elevator.Id == peersUpdate.Peers[firstActivePeer] {
